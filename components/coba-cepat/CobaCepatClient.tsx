@@ -15,9 +15,22 @@ const DEFAULT_FORM_VALUES: FormValues = {
   alat: ["kompor"],
 };
 
-export const CobaCepatClient: React.FC = () => {
+interface CobaCepatClientProps {
+  initialNama?: string;
+}
+
+export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
+  initialNama = "",
+}) => {
+  const formattedNama = initialNama
+    ? initialNama.charAt(0).toUpperCase() + initialNama.slice(1)
+    : "";
+
   const [tampilan, setTampilan] = useState<"form" | "loading" | "hasil">("form");
-  const [formValues, setFormValues] = useState<FormValues>(DEFAULT_FORM_VALUES);
+  const [formValues, setFormValues] = useState<FormValues>({
+    ...DEFAULT_FORM_VALUES,
+    nama: formattedNama,
+  });
   const [hasil, setHasil] = useState<HasilAnalisisType | null>(null);
   const [source, setSource] = useState<"live" | "fallback" | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);

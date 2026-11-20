@@ -7,6 +7,19 @@ export const metadata: Metadata = {
     "Cek kelayakan pangan sisa dapur dan dapatkan ide olahan lezat bernilai tinggi secara gratis tanpa daftar.",
 };
 
-export default function CobaCepatPage() {
-  return <CobaCepatClient />;
+interface CobaCepatPageProps {
+  searchParams: Promise<{
+    bahan?: string;
+  }>;
+}
+
+export default async function CobaCepatPage({
+  searchParams,
+}: CobaCepatPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const rawBahan = resolvedSearchParams?.bahan;
+  const initialNama =
+    typeof rawBahan === "string" ? rawBahan.trim().slice(0, 80) : "";
+
+  return <CobaCepatClient initialNama={initialNama} />;
 }

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface OlahanItem {
+  slug: string;
   nama: string;
   durasi: string;
   gambar: string;
@@ -11,18 +12,21 @@ interface OlahanItem {
 
 const CONTOH_OLAHAN: OlahanItem[] = [
   {
+    slug: "keripik-kulit-pisang-krispi",
     nama: "Keripik Kulit Pisang Krispi",
     durasi: "35 menit",
     gambar: "/images/olahan-keripik-kulit-pisang.jpg",
     alt: "Keripik renyah dari kulit pisang berbumbu gurih di atas mangkuk kayu",
   },
   {
+    slug: "tepung-singkong-serbaguna",
     nama: "Tepung Singkong Serbaguna",
     durasi: "2 hari",
     gambar: "/images/olahan-tepung-singkong.jpg",
     alt: "Tepung singkong mocaf buatan sendiri dalam toples kaca kedap udara",
   },
   {
+    slug: "nugget-batang-bayam-tempe",
     nama: "Nugget Batang Bayam & Tempe",
     durasi: "40 menit",
     gambar: "/images/olahan-nugget-bayam-tempe.jpg",
@@ -51,10 +55,11 @@ export const ContohOlahan: React.FC = () => {
 
       {/* Grid 3 Kartu Olahan */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {CONTOH_OLAHAN.map((item, index) => (
-          <div
-            key={index}
-            className="group flex flex-col text-left focus:outline-none"
+        {CONTOH_OLAHAN.map((item) => (
+          <Link
+            key={item.slug}
+            href={`/katalog/${item.slug}`}
+            className="group flex flex-col text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-[24px]"
           >
             {/* Foto Rasio 3:2 dengan Rounded 24px */}
             <div className="relative w-full aspect-[3/2] rounded-[24px] overflow-hidden bg-surface shadow-xs border border-black/[0.04]">
@@ -74,7 +79,7 @@ export const ContohOlahan: React.FC = () => {
             <p className="text-muted text-sm font-medium">
               Durasi: {item.durasi}
             </p>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

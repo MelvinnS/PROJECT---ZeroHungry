@@ -1,21 +1,17 @@
 import React from "react";
-import { Button } from "@/components/ui/Button";
+import type { Metadata } from "next";
+import { KatalogClient } from "@/components/katalog/KatalogClient";
+
+export const metadata: Metadata = {
+  title: "Katalog Olahan | Dari Sisa Jadi Nilai",
+  description:
+    "Kumpulan resep kreatif dan praktis untuk mengolah bahan pangan sisa rumah tangga menjadi hidangan bernilai.",
+};
 
 export default function KatalogPage() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] py-16 text-center">
-      <div className="w-16 h-16 rounded-full bg-primary-soft text-primary flex items-center justify-center font-bold text-2xl mb-4">
-        📖
-      </div>
-      <h1 className="text-3xl font-extrabold text-ink tracking-tight mb-2">
-        Katalog Olahan
-      </h1>
-      <p className="text-muted text-base max-w-md mb-8">
-        Halaman ini sedang disiapkan.
-      </p>
-      <Button variant="primary" size="md" href="/">
-        Kembali ke Beranda
-      </Button>
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <KatalogClient />
     </div>
   );
 }
