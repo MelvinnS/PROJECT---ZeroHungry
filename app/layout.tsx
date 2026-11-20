@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { getCurrentUserProfile } from "@/lib/auth";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -17,15 +18,17 @@ export const metadata: Metadata = {
     "Ubah bahan pangan sisa dapur menjadi makanan bernilai, aman, dan mudah. Kurangi food loss bersama teknologi pangan lokal.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await getCurrentUserProfile();
+
   return (
     <html lang="id" className={`${plusJakartaSans.variable} h-full antialiased`}>
       <body className="min-h-screen flex flex-col bg-white text-ink font-sans selection:bg-primary-soft selection:text-primary">
-        <Navbar />
+        <Navbar user={user} />
         <main className="flex-1 w-full max-w-6xl mx-auto px-5 sm:px-8">
           {children}
         </main>

@@ -1,21 +1,37 @@
-import React from "react";
-import { Button } from "@/components/ui/Button";
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getCurrentUserProfile, sanitizeNext } from "@/lib/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { AuthCard } from "@/components/auth/AuthCard";
 
-export default function DaftarPage() {
+export const metadata: Metadata = {
+  title: "Daftar | Dari Sisa Jadi Nilai",
+  description: "Daftar akun gratis di Dari Sisa Jadi Nilai untuk rumah tangga dan pelaku usaha pangan lokal.",
+};
+
+interface PageProps {
+  searchParams: Promise<{
+    next?: string;
+  }>;
+}
+
+export default async function DaftarPage({ searchParams }: PageProps) {
+  const user = await getCurrentUserProfile();
+  if (user) {
+    redirect("/dashboard");
+  }
+
+  const resolvedSearchParams = await searchParams;
+  const nextUrl = sanitizeNext(resolvedSearchParams?.next);
+  const isConfigured = isSupabaseConfigured();
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] py-16 text-center">
-      <div className="w-16 h-16 rounded-full bg-primary-soft text-primary flex items-center justify-center font-bold text-2xl mb-4">
-        ✨
-      </div>
-      <h1 className="text-3xl font-extrabold text-ink tracking-tight mb-2">
-        Daftar Akun
-      </h1>
-      <p className="text-muted text-base max-w-md mb-8">
-        Halaman ini sedang disiapkan.
-      </p>
-      <Button variant="primary" size="md" href="/">
-        Kembali ke Beranda
-      </Button>
+    <div className="min-h-[calc(100vh-160px)] flex items-center justify-center py-10 px-4 sm:px-6">
+      <AuthCard
+        tabAwal="daftar"
+        nextUrl={nextUrl}
+        isConfigured={isConfigured}
+      />
     </div>
   );
 }

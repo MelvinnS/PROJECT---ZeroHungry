@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, LogOut } from "lucide-react";
 import { Logo } from "./Logo";
 import { Button } from "./ui/Button";
+import { createClient } from "@/lib/supabase/client";
+import type { Profil } from "@/lib/auth-client";
 
 interface NavItem {
   label: string;
@@ -31,9 +33,14 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  user?: Profil | null;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ user = null }) => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const [prevPathname, setPrevPathname] = useState(pathname);
 
   // Sesuaikan state jika rute berganti (pola resmi React untuk reset state saat route berubah)
@@ -62,6 +69,19 @@ export const Navbar: React.FC = () => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      // Penanganan aman jika gagal
+    }
+    router.push("/");
+    router.refresh();
+  };
+
+  const namaDepan = user?.nama?.trim().split(" ")[0] || "Pengguna";
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -105,14 +125,37 @@ export const Navbar: React.FC = () => {
             })}
           </nav>
 
-          {/* Kanan (Desktop >= 768px): Tombol Masuk & Daftar Gratis */}
-          <div className="hidden md:flex items-center gap-2.5">
-            <Button variant="outline" size="md" href="/masuk">
-              Masuk
-            </Button>
-            <Button variant="primary" size="md" href="/daftar">
-              Daftar Gratis
-            </Button>
+          {/* Kanan (Desktop >= 768px): Autentikasi */}
+          <div className="hidden md:flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="text-sm font-medium text-ink/80 max-w-[130px] truncate" title={`Halo, ${user.nama}`}>
+                  Halo, <strong className="font-semibold text-primary">{namaDepan}</strong>
+                </span>
+                <Button variant="outline" size="md" href="/dashboard">
+                  Dashboard
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-rose-600 transition-colors px-2 py-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  title="Keluar dari akun"
+                  aria-label="Keluar dari akun"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Keluar</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="md" href="/masuk">
+                  Masuk
+                </Button>
+                <Button variant="primary" size="md" href="/daftar">
+                  Daftar Gratis
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Tombol Hamburger Mobile (< 768px) dengan area sentuh minimal 44x44px */}
@@ -160,26 +203,59 @@ export const Navbar: React.FC = () => {
             })}
           </div>
 
-          {/* Tombol Masuk & Daftar Bertumpuk Vertikal Selebar Penuh dengan Padding Bawah Ekstra */}
+          {/* Tombol Bagian Bawah Mobile Bertumpuk Vertikal */}
           <div className="flex flex-col gap-3 pt-6 pb-10 border-t border-black/[0.06] mt-6">
-            <Button
-              variant="outline"
-              size="lg"
-              fullWidth
-              href="/masuk"
-              onClick={() => setIsOpen(false)}
-            >
-              Masuk
-            </Button>
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              href="/daftar"
-              onClick={() => setIsOpen(false)}
-            >
-              Daftar Gratis
-            </Button>
+            {user ? (
+              <>
+                <div className="px-1 text-sm text-muted">
+                  Masuk sebagai{" "}
+                  <strong className="text-ink font-semibold">
+                    Halo, {namaDepan}
+                  </strong>
+                </div>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  fullWidth
+                  href="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Dashboard
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    handleSignOut();
+                  }}
+                  className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-2xl text-base font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200/80 transition-colors min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Keluar</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  fullWidth
+                  href="/masuk"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Masuk
+                </Button>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  href="/daftar"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Daftar Gratis
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}
