@@ -56,9 +56,15 @@ export function getFallbackResult(input: InputAnalisis): HasilAnalisis {
     "bau amis tajam",
   ];
 
+  // Bersihkan frasa negasi seperti "belum berjamur", "belum berbau busuk" agar tidak false positive
+  const kondisiTanpaNegasi = kondisiNormalized.replace(
+    /\b(belum|tidak|bukan)\s+(ada\s+)?(tanda\s+)?(jamur|berjamur|busuk|berlendir|lendir|bau|berbau)\b[^,]*/gi,
+    ""
+  );
+
   // Cari apakah ada kata kunci tidak aman yang cocok
   const matchedKeywords = kataKunciTidakAman.filter((k) =>
-    kondisiNormalized.includes(k)
+    kondisiTanpaNegasi.includes(k)
   );
 
   let hasilPilihan: HasilAnalisis | null = null;
@@ -149,8 +155,8 @@ export function getFallbackResult(input: InputAnalisis): HasilAnalisis {
     if (userAlat.length === 1 && userAlat[0] === "tanpa_alat") {
       return false;
     }
-    // Cek apakah seluruh alat yang dibutuhkan ada di alatSet
-    return ide.alat_dibutuhkan.every((alat) => alatSet.has(alat));
+    // Cek apakah setidaknya ada alat utama yang dimiliki pengguna di alatSet
+    return ide.alat_dibutuhkan.some((alat) => alatSet.has(alat));
   });
 
   if (filteredOlahan.length > 0) {
