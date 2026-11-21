@@ -6,13 +6,13 @@ Platform web cerdas berbasis kecerdasan buatan (AI) yang dirancang untuk membant
 
 ## Mode Contoh vs Mode Live
 
-Aplikasi ini dilengkapi dengan arsitektur **Mode Cadangan Cerdas (Smart Fallback)** sehingga dapat beroperasi 100% gratis dan mandiri tanpa memerlukan saldo API berbayar:
+Aplikasi ini dilengkapi dengan arsitektur **Mode Cadangan Cerdas (Smart Fallback)** sehingga dapat beroperasi 100% gratis dan mandiri:
 
 ### 1. Mode Contoh (Default / Gratis / Offline-Ready)
 - **Kondisi Aktif:**
-  - `ANTHROPIC_API_KEY` kosong atau masih bernilai default `ISI_API_KEY_DI_SINI`, **ATAU**
+  - `GEMINI_API_KEY` kosong atau masih bernilai default `ISI_API_KEY_DI_SINI`, **ATAU**
   - `FORCE_FALLBACK=true` pada file `.env.local`, **ATAU**
-  - Terjadi kendala saat menghubungi API Claude (misal kuota habis, koneksi terputus, atau batas waktu terlewati).
+  - Terjadi kendala saat menghubungi API Gemini (misal kuota habis/rate limit 429, koneksi terputus, atau batas waktu terlewati).
 - **Cara Kerja:**
   - Sistem menggunakan mesin analisis deterministik lokal (`lib/fallback.ts` & `lib/fallback-data.ts`).
   - Mampu mendeteksi secara cerdas:
@@ -22,14 +22,14 @@ Aplikasi ini dilengkapi dengan arsitektur **Mode Cadangan Cerdas (Smart Fallback
     - **Personalisasi:** Resep disesuaikan dengan alat yang dimiliki pengguna, filter bahan alergi, serta optimasi potensi nilai jual untuk tipe akun "usaha".
   - Dilengkapi delay buatan acak (700–1200 ms) agar transisi antarmuka pengguna tampak natural saat presentasi/demo.
 
-### 2. Mode Live (Claude Sonnet 5.5)
+### 2. Mode Live (Google Gemini 2.5 Flash)
 - **Kondisi Aktif:**
-  - `ANTHROPIC_API_KEY` diisi dengan API key resmi dari Anthropic, **DAN**
+  - `GEMINI_API_KEY` diisi dengan API key gratis dari [Google AI Studio](https://aistudio.google.com/apikey) (tanpa perlu kartu kredit), **DAN**
   - `FORCE_FALLBACK=false` (atau tidak diset `true`).
 - **Cara Kerja:**
-  - Endpoint memanggil Claude API secara langsung dengan model `claude-sonnet-5-5`.
-  - Menggunakan *system prompt* khusus teknologi pangan dan validasi skema JSON terstruktur via Zod.
-  - Jika terjadi kegagalan jaringan atau parsing, sistem memiliki mekanisme *retry* otomatis 1 kali, dan bila tetap gagal akan secara mulus (*graceful degradation*) beralih ke Mode Contoh tanpa menampilkan error 500/502 ke pengguna.
+  - Endpoint memanggil Google Gemini API secara langsung dengan model `gemini-2.5-flash` (dapat disesuaikan via `GEMINI_MODEL`).
+  - Menggunakan *system prompt* khusus teknologi pangan dan validasi skema JSON terstruktur ketat via Zod (`HasilAnalisisSchema`).
+  - Jika terjadi kegagalan jaringan, kuota habis (429), atau parsing, sistem secara otomatis beralih (*graceful fallback*) ke Mode Contoh tanpa menampilkan error 500/502 ke pengguna.
 
 ---
 

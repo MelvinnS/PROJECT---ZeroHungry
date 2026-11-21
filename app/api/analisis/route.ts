@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import {
   InputAnalisisSchema,
   HasilAnalisisSchema,
@@ -12,8 +12,8 @@ import { getFallbackResult } from "@/lib/fallback";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-// Konstanta model Anthropic Claude yang digunakan
-const MODEL_NAME = "claude-sonnet-5-5";
+// Konstanta model Google Gemini yang digunakan
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 /**
  * Fungsi pembantu untuk membuat delay buatan acak (700 - 1200 ms)
@@ -32,8 +32,7 @@ export async function POST(request: Request) {
     let rawBody: unknown;
     try {
       rawBody = await request.json();
-    } catch (err) {
-      console.error("Gagal melakukan parse body JSON request:", err);
+    } catch {
       return NextResponse.json(
         {
           error: "Input tidak valid",
@@ -58,14 +57,14 @@ export async function POST(request: Request) {
     const inputData = parseInputResult.data;
 
     // ─────────────────────────────────────────────────────────────
-    // Langkah 2: Tentukan apakah mode Live Claude diizinkan
+    // Langkah 2: Tentukan apakah mode Live Gemini diizinkan
     // ─────────────────────────────────────────────────────────────
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
     const isForceFallback = process.env.FORCE_FALLBACK === "true";
     const hasValidApiKey =
       Boolean(apiKey) &&
       apiKey !== "ISI_API_KEY_DI_SINI" &&
-      apiKey!.trim() !== "";
+      apiKey !== "";
 
     // ─────────────────────────────────────────────────────────────
     // Langkah 3: Jika mode live TIDAK diizinkan, kembalikan Fallback
@@ -85,41 +84,37 @@ export async function POST(request: Request) {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // Langkah 4: Mode Live diizinkan -> Jalankan Claude API
+    // Langkah 4: Mode Live diizinkan -> Jalankan Google Gemini API
     // ─────────────────────────────────────────────────────────────
-    const client = new Anthropic({ apiKey: apiKey! });
+    const ai = new GoogleGenAI({ apiKey: apiKey! });
     const userMessageContent = buildUserMessage(inputData);
 
     const MAX_ATTEMPTS = 2;
     let parsedHasil: HasilAnalisis | null = null;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
       try {
-        // Panggil Claude API dengan batas timeout 20000ms
-        const response = await client.messages.create(
-          {
-            model: MODEL_NAME,
-            max_tokens: 4000,
-            system: SYSTEM_PROMPT,
-            messages: [
-              {
-                role: "user",
-                content: userMessageContent,
-              },
-            ],
+        const response = await ai.models.generateContent({
+          model: MODEL,
+          contents: userMessageContent,
+          config: {
+            systemInstruction: SYSTEM_PROMPT,
+            responseMimeType: "application/json",
+            temperature: 0.4,
+            maxOutputTokens: 8192,
+            thinkingConfig: { thinkingBudget: 0 },
+            abortSignal: controller.signal,
           },
-          { timeout: 20000 }
-        );
+        });
 
-        // Ambil teks dari blok konten bertipe 'text'
-        let textContent = "";
-        for (const block of response.content) {
-          if (block.type === "text") {
-            textContent += block.text;
-          }
-        }
+        clearTimeout(timeoutId);
 
-        // Bersihkan pagar kode markdown dan ekstrak objek JSON
+        const textContent = response.text || "";
+
+        // Bersihkan pagar kode markdown jika ada dan ekstrak objek JSON
         const cleaned = textContent
           .replace(/```(?:json)?/gi, "")
           .replace(/```/g, "")
@@ -129,13 +124,13 @@ export async function POST(request: Request) {
         const lastBrace = cleaned.lastIndexOf("}");
 
         if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-          throw new Error("Objek JSON tidak ditemukan dalam respons Claude API");
+          throw new Error("Objek JSON tidak ditemukan dalam respons Gemini API");
         }
 
         const jsonString = cleaned.substring(firstBrace, lastBrace + 1);
         const parsedJson = JSON.parse(jsonString);
 
-        // Validasi hasil dengan HasilAnalisisSchema
+        // Validasi ketat hasil dengan HasilAnalisisSchema
         const parseHasilResult = HasilAnalisisSchema.safeParse(parsedJson);
         if (!parseHasilResult.success) {
           throw new Error(
@@ -148,12 +143,35 @@ export async function POST(request: Request) {
         // Berhasil mendapatkan respons live yang valid
         parsedHasil = parseHasilResult.data;
         break;
-      } catch (error) {
+      } catch (error: unknown) {
+        clearTimeout(timeoutId);
+
+        const errMsg = error instanceof Error ? error.message : String(error);
+        const errStatus =
+          typeof error === "object" && error !== null && "status" in error
+            ? (error as { status: number }).status
+            : undefined;
+
         console.error(
-          `[Live Attempt ${attempt}/${MAX_ATTEMPTS}] Error saat memanggil Claude API:`,
-          error
+          `[Live Gemini Percobaan ${attempt}/${MAX_ATTEMPTS}] Error: ${errMsg}`
         );
-        // Lanjut ke percobaan berikutnya jika masih ada sisa
+
+        // JANGAN mengulang pada error 429 (rate limit) atau 401/403
+        const isNonRetryable =
+          errStatus === 429 ||
+          errStatus === 401 ||
+          errStatus === 403 ||
+          errMsg.includes("429") ||
+          errMsg.includes("RESOURCE_EXHAUSTED") ||
+          errMsg.includes("quota") ||
+          errMsg.includes("rate limit") ||
+          errMsg.includes("401") ||
+          errMsg.includes("403") ||
+          errMsg.includes("API_KEY_INVALID");
+
+        if (isNonRetryable) {
+          break;
+        }
       }
     }
 
@@ -170,10 +188,10 @@ export async function POST(request: Request) {
 
     // ─────────────────────────────────────────────────────────────
     // Langkah 5: Jika live gagal total (error API / timeout / JSON parse / Zod),
-    // jatuh ke fallback cerdas (status 200) dengan fallbackReason "api_error"
+    // beralih ke fallback cerdas (status 200) dengan fallbackReason "api_error"
     // ─────────────────────────────────────────────────────────────
     console.error(
-      "Live Claude API gagal setelah retry. Beralih ke fallback cadangan cerdas."
+      "Live Gemini API gagal. Beralih ke fallback cadangan cerdas."
     );
     await createRandomDelay();
     const fallbackData = getFallbackResult(inputData);
@@ -187,7 +205,7 @@ export async function POST(request: Request) {
     );
   } catch (unexpectedError) {
     // ─────────────────────────────────────────────────────────────
-    // Langkah 8: Penanganan error tak terduga paling luar
+    // Langkah 6: Penanganan error tak terduga paling luar
     // ─────────────────────────────────────────────────────────────
     console.error("Terjadi error tak terduga pada route analisis:", unexpectedError);
 
