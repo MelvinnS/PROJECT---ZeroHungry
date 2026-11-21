@@ -57,11 +57,11 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
     setTampilan("loading");
     scrollToTop();
 
-    // Timeout klien 35 detik menggunakan AbortController
+    // Timeout klien 60 detik menggunakan AbortController dengan alasan timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 35000);
+      controller.abort("TIMEOUT");
+    }, 60000);
 
     try {
       const res = await fetch("/api/analisis", {
@@ -92,10 +92,15 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
       }
     } catch (err: unknown) {
       clearTimeout(timeoutId);
-      console.error("Kesalahan jaringan atau timeout saat memanggil /api/analisis:", err);
-      if (err instanceof Error && err.name === "AbortError") {
+      const isAbort =
+        (err instanceof Error && (err.name === "AbortError" || err.message.toLowerCase().includes("aborted"))) ||
+        controller.signal.aborted;
+
+      if (isAbort) {
+        console.warn("Permintaan analisis dibatalkan karena timeout.");
         setServerError("Waktu analisis habis. Silakan periksa koneksi lalu coba lagi.");
       } else {
+        console.error("Kesalahan jaringan saat memanggil /api/analisis:", err);
         setServerError(
           "Maaf, analisis belum berhasil. Periksa isian lalu coba lagi."
         );
