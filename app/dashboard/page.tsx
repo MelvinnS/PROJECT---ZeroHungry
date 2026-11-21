@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SignOutButton } from "@/components/auth/SignOutButton";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, Calculator } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Dashboard | Dari Sisa Jadi Nilai",
@@ -71,6 +71,32 @@ export default async function DashboardPage() {
           <SignOutButton />
         </div>
       </Card>
+
+      {(user.role === "usaha" || user.role === "admin") && (
+        <Card className="mt-6 p-6 sm:p-8 border border-black/[0.06] shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-primary-soft flex items-center justify-center text-primary shrink-0">
+              <Calculator className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-ink">
+                Kalkulator Mentah vs Olahan
+              </h2>
+              <p className="text-sm text-muted mt-1">
+                Bandingkan untung jual mentah dan olah dulu.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="primary"
+            size="md"
+            href="/dashboard/kalkulator"
+            className="shrink-0"
+          >
+            Buka Kalkulator
+          </Button>
+        </Card>
+      )}
     </div>
   );
 }

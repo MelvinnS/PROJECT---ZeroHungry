@@ -9,7 +9,7 @@ export async function proxy(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith("/dashboard")) {
       const url = request.nextUrl.clone();
       url.pathname = "/masuk";
-      url.searchParams.set("next", "/dashboard");
+      url.searchParams.set("next", request.nextUrl.pathname);
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
@@ -52,7 +52,7 @@ export async function proxy(request: NextRequest) {
     if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
       const url = request.nextUrl.clone();
       url.pathname = "/masuk";
-      url.searchParams.set("next", "/dashboard");
+      url.searchParams.set("next", request.nextUrl.pathname);
       return NextResponse.redirect(url);
     }
   } catch {
@@ -60,7 +60,7 @@ export async function proxy(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith("/dashboard")) {
       const url = request.nextUrl.clone();
       url.pathname = "/masuk";
-      url.searchParams.set("next", "/dashboard");
+      url.searchParams.set("next", request.nextUrl.pathname);
       return NextResponse.redirect(url);
     }
   }
