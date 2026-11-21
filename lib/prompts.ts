@@ -103,5 +103,7 @@ export function buildUserMessage(input: InputAnalisis): string {
 - Tipe pengguna: ${input.tipe}
 - Alat tersedia: ${alatStr}
 - Alergi/pantangan: ${alergiStr}
-- Daerah: ${daerahStr}`;
+- Daerah: ${daerahStr}
+
+Berikan tepat 3 ide olahan. Setiap ide maksimal 5 langkah singkat. Teks ringkas.`;
 }

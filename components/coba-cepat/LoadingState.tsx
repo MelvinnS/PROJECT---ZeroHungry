@@ -6,7 +6,9 @@ import { Logo } from "@/components/Logo";
 const LOADING_MESSAGES = [
   "Memeriksa keamanan pangan…",
   "Menghitung sisa umur simpan…",
-  "Mencari ide olahan lezat…",
+  "Meracik panduan pengawetan terbaik…",
+  "Mencari ide olahan lezat dan hemat…",
+  "Menyusun langkah resep yang praktis…",
 ];
 
 export const LoadingState: React.FC = () => {

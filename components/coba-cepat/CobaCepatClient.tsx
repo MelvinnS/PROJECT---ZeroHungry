@@ -57,11 +57,11 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
     setTampilan("loading");
     scrollToTop();
 
-    // Timeout klien 60 detik menggunakan AbortController dengan alasan timeout
+    // Timeout klien 65 detik menggunakan AbortController dengan alasan timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort("TIMEOUT");
-    }, 60000);
+    }, 65000);
 
     try {
       const res = await fetch("/api/analisis", {
