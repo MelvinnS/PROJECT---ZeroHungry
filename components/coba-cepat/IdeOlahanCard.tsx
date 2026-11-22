@@ -12,12 +12,14 @@ interface IdeOlahanCardProps {
   index: number;
   isOpen: boolean;
   onToggle: () => void;
+  mono?: boolean;
 }
 
 export const IdeOlahanCard: React.FC<IdeOlahanCardProps> = ({
   ide,
   isOpen,
   onToggle,
+  mono = false,
 }) => {
   const panelId = useId();
   const buttonId = useId();
@@ -32,6 +34,29 @@ export const IdeOlahanCard: React.FC<IdeOlahanCardProps> = ({
     difficultyVariant = "danger";
     difficultyLabel = "Sulit";
   }
+
+  // Gaya badge mono khusus dashboard (hijau solid / outline / hitam tanpa kuning/merah)
+  const getMonoBadge = () => {
+    if (ide.tingkat_kesulitan === "sulit") {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#111111] text-white">
+          {difficultyLabel}
+        </span>
+      );
+    }
+    if (ide.tingkat_kesulitan === "sedang") {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-[#1B6B3A] text-[#1B6B3A] bg-transparent">
+          {difficultyLabel}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#1B6B3A] text-white">
+        {difficultyLabel}
+      </span>
+    );
+  };
 
   return (
     <div className="rounded-[24px] bg-white border border-black/[0.04] shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-5 sm:p-6 transition-all">
@@ -53,9 +78,13 @@ export const IdeOlahanCard: React.FC<IdeOlahanCardProps> = ({
                 <Timer className="w-3.5 h-3.5" />
                 {ide.durasi_menit} menit
               </span>
-              <Badge variant={difficultyVariant} className="text-[11px] py-0.5">
-                {difficultyLabel}
-              </Badge>
+              {mono ? (
+                getMonoBadge()
+              ) : (
+                <Badge variant={difficultyVariant} className="text-[11px] py-0.5">
+                  {difficultyLabel}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
@@ -150,8 +179,18 @@ export const IdeOlahanCard: React.FC<IdeOlahanCardProps> = ({
 
           {/* Tips Tambahan */}
           {ide.tips && (
-            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/60 flex items-start gap-2.5 text-xs sm:text-sm text-amber-900 mb-4">
-              <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div
+              className={`p-3.5 rounded-xl border flex items-start gap-2.5 text-xs sm:text-sm mb-4 ${
+                mono
+                  ? "bg-[#F3F7F4] border-black/[0.06] text-[#111111]"
+                  : "bg-amber-50/70 border-amber-200/60 text-amber-900"
+              }`}
+            >
+              <Lightbulb
+                className={`w-4 h-4 shrink-0 mt-0.5 ${
+                  mono ? "text-[#1B6B3A]" : "text-amber-600"
+                }`}
+              />
               <div>
                 <strong className="font-semibold">Tips: </strong>
                 <span>{ide.tips}</span>
