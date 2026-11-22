@@ -6,9 +6,21 @@ import React, {
   useEffect,
   useCallback,
   useId,
+  useSyncExternalStore,
 } from "react";
+import { createPortal } from "react-dom";
 import { ChefHat, X, Send, WifiOff, ChevronDown } from "lucide-react";
 import type { KonteksChef, PesanRiwayat } from "@/lib/prompts-chef";
+
+// Helper hook hydration-safe untuk deteksi client-side mounted
+const emptySubscribe = () => () => {};
+function useMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
 
 // Tipe untuk daftar resep yang bisa dipilih
 export interface ResepPilihan {
@@ -59,6 +71,7 @@ export const ChefChat: React.FC<ChefChatProps> = ({
   daftarResep = [],
   mono = false,
 }) => {
+  const mounted = useMounted();
   const [panelTerbuka, setPanelTerbuka] = useState(false);
   const [pesanList, setPesanList] = useState<PesanChat[]>([
     { id: "pembuka", role: "chef", teks: PESAN_PEMBUKA },
@@ -79,7 +92,7 @@ export const ChefChat: React.FC<ChefChatProps> = ({
   const jumlahPesanUser = pesanList.filter((p) => p.role === "user").length;
   const batasTercapai = jumlahPesanUser >= BATAS_PESAN_SESI;
 
-  // Scroll otomatis ke bawah saat ada pesan baru
+  // Scroll otomatis ke bawah saat ada pesan baru atau loading state berubah
   useEffect(() => {
     if (areaLogRef.current) {
       areaLogRef.current.scrollTop = areaLogRef.current.scrollHeight;
@@ -88,16 +101,16 @@ export const ChefChat: React.FC<ChefChatProps> = ({
 
   // Kunci scroll body di mobile saat panel terbuka
   useEffect(() => {
+    if (!mounted) return;
     const isMobile = window.innerWidth < 768;
     if (panelTerbuka && isMobile) {
+      const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [panelTerbuka]);
+  }, [panelTerbuka, mounted]);
 
   // Tangkap Escape untuk menutup panel
   useEffect(() => {
@@ -114,9 +127,12 @@ export const ChefChat: React.FC<ChefChatProps> = ({
   // Fokus ke input saat panel terbuka
   useEffect(() => {
     if (panelTerbuka) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    } else {
-      toggleBtnRef.current?.focus();
+      setTimeout(() => {
+        inputRef.current?.focus();
+        if (areaLogRef.current) {
+          areaLogRef.current.scrollTop = areaLogRef.current.scrollHeight;
+        }
+      }, 100);
     }
   }, [panelTerbuka]);
 
@@ -252,10 +268,16 @@ export const ChefChat: React.FC<ChefChatProps> = ({
   };
 
   // Gaya berdasarkan prop mono
-  const warnaPrimary = mono ? "#1B6B3A" : "#1B6B3A";
-  const warnaPanel = mono ? "bg-white border border-black/[0.08]" : "bg-white border border-black/[0.06]";
+  const warnaPrimary = "#1B6B3A";
+  const warnaPanel = mono
+    ? "bg-white border border-black/[0.08]"
+    : "bg-white border border-black/[0.06]";
 
-  return (
+  if (!mounted) {
+    return null;
+  }
+
+  return createPortal(
     <>
       {/* ── Tombol Trigger Fixed ──────────────────────────────────────── */}
       <button
@@ -267,13 +289,13 @@ export const ChefChat: React.FC<ChefChatProps> = ({
         aria-controls={panelId}
         aria-label="Tanya Chef Sisa"
         style={{ backgroundColor: warnaPrimary }}
-        className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2.5 px-4 py-3 rounded-full text-white text-sm font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all min-h-[48px] min-w-[48px]"
+        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2.5 px-4 py-3 rounded-full text-white text-sm font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all min-h-[48px] min-w-[48px]"
       >
         <ChefHat className="w-5 h-5 shrink-0" />
         <span className="hidden sm:inline">Tanya Chef</span>
       </button>
 
-      {/* ── Overlay untuk Mobile ─────────────────────────────────────── */}
+      {/* ── Overlay untuk Mobile (di bawah panel, z-40) ────────────── */}
       {panelTerbuka && (
         <div
           className="fixed inset-0 z-40 bg-black/40 md:hidden"
@@ -282,7 +304,7 @@ export const ChefChat: React.FC<ChefChatProps> = ({
         />
       )}
 
-      {/* ── Panel Utama ───────────────────────────────────────────────── */}
+      {/* ── Panel Utama (z-50 di atas drawer & navbar) ─────────────── */}
       <div
         id={panelId}
         ref={panelRef}
@@ -294,13 +316,13 @@ export const ChefChat: React.FC<ChefChatProps> = ({
             ? "opacity-100 translate-y-0 pointer-events-auto"
             : "opacity-0 translate-y-4 pointer-events-none"
         }
-          /* Mobile: bottom sheet */
-          bottom-0 left-0 right-0 h-[85dvh] rounded-t-[32px]
-          /* Desktop: kartu kanan bawah */
-          md:bottom-24 md:right-5 md:left-auto md:w-[380px] md:h-auto md:max-h-[70dvh] md:rounded-[28px]
+          /* Mobile (<768px): fixed, inset-x-0 bottom-0, h-[85dvh] max-h-[calc(100dvh-1rem)], rounded-t-[32px] */
+          inset-x-0 bottom-0 h-[85dvh] max-h-[calc(100dvh-1rem)] rounded-t-[32px]
+          /* Desktop (>=768px): fixed bottom-5 right-5, lebar 380px, max-h-[70dvh], rounded-[28px] */
+          md:inset-x-auto md:bottom-5 md:right-5 md:w-[380px] md:h-auto md:max-h-[70dvh] md:rounded-[28px]
           ${warnaPanel} shadow-2xl`}
       >
-        {/* Header Panel */}
+        {/* Header Panel (shrink-0) */}
         <div
           className="flex items-center justify-between px-5 py-4 border-b border-black/[0.06] shrink-0"
           style={{ borderRadius: "inherit inherit 0 0" }}
@@ -332,7 +354,7 @@ export const ChefChat: React.FC<ChefChatProps> = ({
           </button>
         </div>
 
-        {/* Select Resep (hanya jika ada daftarResep) */}
+        {/* Select Resep (shrink-0, hanya jika ada daftarResep) */}
         {daftarResep.length > 0 && (
           <div className="px-4 pt-3 pb-2 shrink-0 border-b border-black/[0.04]">
             <div className="relative">
@@ -362,13 +384,13 @@ export const ChefChat: React.FC<ChefChatProps> = ({
           </div>
         )}
 
-        {/* Area Log Percakapan */}
+        {/* Area Log Percakapan (flex-1 min-h-0 overflow-y-auto) */}
         <div
           ref={areaLogRef}
           role="log"
           aria-live="polite"
           aria-label="Percakapan dengan Chef Sisa"
-          className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0"
+          className="flex-1 min-h-0 overflow-y-auto px-4 py-4 flex flex-col gap-3"
         >
           {pesanList.map((pesan) => {
             const isUser = pesan.role === "user";
@@ -437,7 +459,7 @@ export const ChefChat: React.FC<ChefChatProps> = ({
           )}
         </div>
 
-        {/* Chip Saran (hilang setelah pesan pertama) */}
+        {/* Chip Saran (shrink-0, hilang setelah pesan pertama) */}
         {!sudahAdaPesanPertama && (
           <div className="px-4 pb-2 flex flex-wrap gap-1.5 shrink-0">
             {CHIP_SARAN.map((saran) => (
@@ -454,8 +476,8 @@ export const ChefChat: React.FC<ChefChatProps> = ({
           </div>
         )}
 
-        {/* Input Area */}
-        <div className="px-4 pb-4 pt-2 shrink-0 border-t border-black/[0.06]">
+        {/* Baris Input (shrink-0 dengan safe area padding) */}
+        <div className="px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] shrink-0 border-t border-black/[0.06]">
           {batasTercapai ? (
             <p className="text-xs text-[#6B6B6B] text-center py-2 font-medium">
               Batas pertanyaan sesi ini tercapai. Muat ulang halaman untuk memulai lagi.
@@ -475,12 +497,12 @@ export const ChefChat: React.FC<ChefChatProps> = ({
                 rows={1}
                 disabled={isLoading}
                 aria-label="Pesan untuk Chef Sisa"
-                className="flex-1 resize-none rounded-2xl bg-[#F3F7F4] border border-black/[0.08] px-4 py-2.5 text-sm text-[#111111] placeholder:text-[#6B6B6B] focus:outline-none focus:ring-2 focus:ring-[#1B6B3A]/30 disabled:opacity-50 leading-relaxed max-h-[120px]"
+                className="flex-1 resize-none rounded-2xl bg-[#F3F7F4] border border-black/[0.08] px-4 py-2.5 text-sm text-[#111111] placeholder:text-[#6B6B6B] focus:outline-none focus:ring-2 focus:ring-[#1B6B3A]/30 disabled:opacity-50 leading-relaxed max-h-[100px]"
                 style={{ fontSize: "16px", overflowY: "auto" }}
                 onInput={(e) => {
                   const el = e.currentTarget;
                   el.style.height = "auto";
-                  el.style.height = Math.min(el.scrollHeight, 120) + "px";
+                  el.style.height = Math.min(el.scrollHeight, 100) + "px";
                 }}
               />
               <button
@@ -496,9 +518,7 @@ export const ChefChat: React.FC<ChefChatProps> = ({
           )}
         </div>
       </div>
-
-      {/* Padding bawah halaman di mobile agar konten tidak tertutup tombol */}
-      <div className="h-20 md:h-0" aria-hidden="true" />
-    </>
+    </>,
+    document.body
   );
 };

@@ -269,7 +269,7 @@ export const DashboardLayoutClient: React.FC<DashboardLayoutClientProps> = ({
           4) AREA KONTEN UTAMA (KANAN)
           Latar putih, max-w-5xl
          ───────────────────────────────────────────────────────────── */}
-      <main className="flex-1 min-w-0 max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <main className="flex-1 min-w-0 max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8 pb-24 md:pb-12">
         {children}
       </main>
     </div>
