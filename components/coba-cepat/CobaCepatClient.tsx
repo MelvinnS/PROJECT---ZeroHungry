@@ -1,19 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { AnalisisForm, type FormValues } from "./AnalisisForm";
+import {
+  AnalisisForm,
+  type FormValues,
+  type AnalisisSubmitPayload,
+  createDefaultBahanItem,
+} from "./AnalisisForm";
 import { LoadingState } from "./LoadingState";
 import { HasilAnalisis } from "./HasilAnalisis";
+import { HasilMultiView } from "./HasilMultiView";
 import type { HasilAnalisis as HasilAnalisisType, InputAnalisis } from "@/lib/schemas";
-
-const DEFAULT_FORM_VALUES: FormValues = {
-  nama: "",
-  jumlah: 1,
-  satuan: "kg",
-  kondisiPilihan: "segar",
-  kondisiDetail: "",
-  alat: ["kompor"],
-};
+import type { HasilMulti, InputMulti } from "@/lib/schemas-multi";
 
 interface CobaCepatClientProps {
   initialNama?: string;
@@ -30,11 +28,19 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
 
   const [tampilan, setTampilan] = useState<"form" | "loading" | "hasil">("form");
   const [formValues, setFormValues] = useState<FormValues>({
-    ...DEFAULT_FORM_VALUES,
-    nama: formattedNama,
+    items: [createDefaultBahanItem(formattedNama)],
+    alat: ["kompor"],
   });
-  const [submittedPayload, setSubmittedPayload] = useState<InputAnalisis | null>(null);
-  const [hasil, setHasil] = useState<HasilAnalisisType | null>(null);
+
+  const [lastMode, setLastMode] = useState<"single" | "multi">("single");
+  const [submittedPayloadSingle, setSubmittedPayloadSingle] =
+    useState<InputAnalisis | null>(null);
+  const [submittedPayloadMulti, setSubmittedPayloadMulti] =
+    useState<InputMulti | null>(null);
+
+  const [hasilSingle, setHasilSingle] = useState<HasilAnalisisType | null>(null);
+  const [hasilMulti, setHasilMulti] = useState<HasilMulti | null>(null);
+
   const [source, setSource] = useState<"live" | "fallback" | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -52,28 +58,40 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
   };
 
   const handleSubmitForm = async (
-    payload: InputAnalisis,
+    submitData: AnalisisSubmitPayload,
     currentFormState: FormValues
   ) => {
     setServerError(null);
     setFormValues(currentFormState);
-    setSubmittedPayload(payload);
+    setLastMode(submitData.mode);
     setTampilan("loading");
     scrollToTop();
 
-    // Timeout klien 65 detik menggunakan AbortController dengan alasan timeout
+    // Timeout klien 65 detik menggunakan AbortController dengan pesan timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort("TIMEOUT");
     }, 65000);
 
+    const isSingle = submitData.mode === "single";
+    const endpoint = isSingle ? "/api/analisis" : "/api/analisis-multi";
+    const bodyPayload = submitData.payload;
+
+    if (isSingle) {
+      setSubmittedPayloadSingle(submitData.payload as InputAnalisis);
+      setSubmittedPayloadMulti(null);
+    } else {
+      setSubmittedPayloadMulti(submitData.payload as InputMulti);
+      setSubmittedPayloadSingle(null);
+    }
+
     try {
-      const res = await fetch("/api/analisis", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(bodyPayload),
         signal: controller.signal,
       });
 
@@ -82,12 +100,17 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
       const json = await res.json().catch(() => null);
 
       if (res.ok && json && json.data) {
-        setHasil(json.data as HasilAnalisisType);
+        if (isSingle) {
+          setHasilSingle(json.data as HasilAnalisisType);
+          setHasilMulti(null);
+        } else {
+          setHasilMulti(json.data as HasilMulti);
+          setHasilSingle(null);
+        }
         setSource(json.source || "fallback");
         setTampilan("hasil");
         scrollToTop();
       } else {
-        // Respons status 400 atau error server
         console.error("Gagal melakukan analisis bahan:", json);
         setServerError(
           "Maaf, analisis belum berhasil. Periksa isian lalu coba lagi."
@@ -97,14 +120,18 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const isAbort =
-        (err instanceof Error && (err.name === "AbortError" || err.message.toLowerCase().includes("aborted"))) ||
+        (err instanceof Error &&
+          (err.name === "AbortError" ||
+            err.message.toLowerCase().includes("aborted"))) ||
         controller.signal.aborted;
 
       if (isAbort) {
         console.warn("Permintaan analisis dibatalkan karena timeout.");
-        setServerError("Waktu analisis habis. Silakan periksa koneksi lalu coba lagi.");
+        setServerError(
+          "Waktu analisis habis. Silakan periksa koneksi lalu coba lagi."
+        );
       } else {
-        console.error("Kesalahan jaringan saat memanggil /api/analisis:", err);
+        console.error("Kesalahan jaringan saat memanggil endpoint analisis:", err);
         setServerError(
           "Maaf, analisis belum berhasil. Periksa isian lalu coba lagi."
         );
@@ -115,9 +142,14 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
 
   // Reset form untuk menganalisis bahan lain dari awal
   const handleReset = () => {
-    setFormValues(DEFAULT_FORM_VALUES);
-    setSubmittedPayload(null);
-    setHasil(null);
+    setFormValues({
+      items: [createDefaultBahanItem()],
+      alat: ["kompor"],
+    });
+    setSubmittedPayloadSingle(null);
+    setSubmittedPayloadMulti(null);
+    setHasilSingle(null);
+    setHasilMulti(null);
     setSource(null);
     setServerError(null);
     setTampilan("form");
@@ -135,12 +167,24 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
         />
       )}
 
-      {tampilan === "loading" && <LoadingState />}
+      {tampilan === "loading" && (
+        <LoadingState isMulti={lastMode === "multi"} />
+      )}
 
-      {tampilan === "hasil" && hasil && (
+      {tampilan === "hasil" && hasilSingle && (
         <HasilAnalisis
-          data={hasil}
-          inputPayload={submittedPayload}
+          data={hasilSingle}
+          inputPayload={submittedPayloadSingle}
+          source={source}
+          isLoggedIn={isLoggedIn}
+          onReset={handleReset}
+        />
+      )}
+
+      {tampilan === "hasil" && hasilMulti && (
+        <HasilMultiView
+          data={hasilMulti}
+          inputPayload={submittedPayloadMulti}
           source={source}
           isLoggedIn={isLoggedIn}
           onReset={handleReset}

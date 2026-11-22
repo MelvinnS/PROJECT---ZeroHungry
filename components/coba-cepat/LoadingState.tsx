@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
 
-const LOADING_MESSAGES = [
+const LOADING_MESSAGES_SINGLE = [
   "Memeriksa keamanan pangan…",
   "Menghitung sisa umur simpan…",
   "Meracik panduan pengawetan terbaik…",
@@ -11,16 +11,29 @@ const LOADING_MESSAGES = [
   "Menyusun langkah resep yang praktis…",
 ];
 
-export const LoadingState: React.FC = () => {
+const LOADING_MESSAGES_MULTI = [
+  "Memeriksa keamanan tiap bahan pangan…",
+  "Menghitung sisa umur simpan…",
+  "Menggabungkan resep dari bahan yang aman…",
+  "Meracik panduan pengawetan terbaik…",
+  "Menyusun langkah resep praktis & hemat…",
+];
+
+interface LoadingStateProps {
+  isMulti?: boolean;
+}
+
+export const LoadingState: React.FC<LoadingStateProps> = ({ isMulti = false }) => {
   const [messageIndex, setMessageIndex] = useState(0);
+  const messages = isMulti ? LOADING_MESSAGES_MULTI : LOADING_MESSAGES_SINGLE;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+      setMessageIndex((prev) => (prev + 1) % messages.length);
     }, 1500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [messages.length]);
 
   return (
     <div
@@ -37,15 +50,15 @@ export const LoadingState: React.FC = () => {
       </div>
 
       <h2 className="text-xl sm:text-2xl font-extrabold text-ink tracking-tight mb-2">
-        Sedang menganalisis bahan…
+        {isMulti ? "Sedang menganalisis bahan-bahan…" : "Sedang menganalisis bahan…"}
       </h2>
 
       <p className="text-muted text-sm sm:text-base font-medium h-6 transition-all duration-300">
-        {LOADING_MESSAGES[messageIndex]}
+        {messages[messageIndex]}
       </p>
 
       <div className="mt-8 flex items-center justify-center gap-1.5">
-        {LOADING_MESSAGES.map((_, i) => (
+        {messages.map((_, i) => (
           <span
             key={i}
             className={`h-1.5 rounded-full transition-all duration-300 ${

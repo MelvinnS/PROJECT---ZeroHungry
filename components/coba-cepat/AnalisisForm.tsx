@@ -10,24 +10,36 @@ import {
   Disc,
   Utensils,
   AlertCircle,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import type { InputAnalisis } from "@/lib/schemas";
+import type { InputMulti } from "@/lib/schemas-multi";
 
-export interface FormValues {
+export interface ItemBahanForm {
+  id: string;
   nama: string;
   jumlah: number;
   satuan: "kg" | "gram" | "buah" | "porsi" | "liter" | "ikat";
   kondisiPilihan: "segar" | "layu" | "rusak";
   kondisiDetail: string;
+}
+
+export interface FormValues {
+  items: ItemBahanForm[];
   alat: string[];
 }
 
+export type AnalisisSubmitPayload =
+  | { mode: "single"; payload: InputAnalisis }
+  | { mode: "multi"; payload: InputMulti };
+
 interface AnalisisFormProps {
   initialValues: FormValues;
-  onSubmit: (payload: InputAnalisis, formState: FormValues) => void;
+  onSubmit: (submitData: AnalisisSubmitPayload, formState: FormValues) => void;
   isLoading: boolean;
   serverError: string | null;
 }
@@ -60,34 +72,82 @@ const ALAT_OPTIONS = [
 
 const QUICK_TAGS = ["Berjamur", "Berbau busuk", "Berlendir"];
 
+export const createDefaultBahanItem = (initialNama = ""): ItemBahanForm => ({
+  id: Math.random().toString(36).substring(2, 9),
+  nama: initialNama,
+  jumlah: 1,
+  satuan: "kg",
+  kondisiPilihan: "segar",
+  kondisiDetail: "",
+});
+
 export const AnalisisForm: React.FC<AnalisisFormProps> = ({
   initialValues,
   onSubmit,
   isLoading,
   serverError,
 }) => {
-  const [nama, setNama] = useState(initialValues.nama);
-  const [jumlah, setJumlah] = useState<number>(initialValues.jumlah);
-  const [satuan, setSatuan] = useState<FormValues["satuan"]>(initialValues.satuan);
-  const [kondisiPilihan, setKondisiPilihan] = useState<FormValues["kondisiPilihan"]>(
-    initialValues.kondisiPilihan
+  const [items, setItems] = useState<ItemBahanForm[]>(
+    initialValues.items.length > 0
+      ? initialValues.items
+      : [createDefaultBahanItem()]
   );
-  const [kondisiDetail, setKondisiDetail] = useState(initialValues.kondisiDetail);
   const [alat, setAlat] = useState<string[]>(initialValues.alat);
 
-  // Field error validation
-  const [errors, setErrors] = useState<{
-    nama?: string;
-    jumlah?: string;
-    kondisiDetail?: string;
-  }>({});
+  // Error per baris bahan: [id]: { nama?: string, jumlah?: string, kondisiDetail?: string }
+  const [itemErrors, setItemErrors] = useState<
+    Record<string, { nama?: string; jumlah?: string; kondisiDetail?: string }>
+  >({});
 
-  // Refs untuk auto-fokus ke error pertama
-  const namaRef = useRef<HTMLInputElement>(null);
-  const jumlahRef = useRef<HTMLInputElement>(null);
-  const kondisiDetailRef = useRef<HTMLTextAreaElement>(null);
+  // Refs per item untuk auto-fokus ke error pertama
+  const inputRefs = useRef<
+    Record<
+      string,
+      {
+        nama?: HTMLInputElement | null;
+        jumlah?: HTMLInputElement | null;
+        kondisiDetail?: HTMLTextAreaElement | null;
+      }
+    >
+  >({});
 
-  // Toggle pilihan alat dapur
+  // Helper untuk update field satu item
+  const updateItem = (
+    id: string,
+    field: keyof ItemBahanForm,
+    value: string | number
+  ) => {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+
+    // Hapus error jika sedang diedit
+    if (itemErrors[id]) {
+      setItemErrors((prev) => ({
+        ...prev,
+        [id]: {
+          ...prev[id],
+          [field]: undefined,
+        },
+      }));
+    }
+  };
+
+  const handleTambahBahan = () => {
+    if (items.length >= 5) return;
+    setItems((prev) => [...prev, createDefaultBahanItem()]);
+  };
+
+  const handleHapusBahan = (id: string) => {
+    if (items.length <= 1) return;
+    setItems((prev) => prev.filter((item) => item.id !== id));
+    setItemErrors((prev) => {
+      const copy = { ...prev };
+      delete copy[id];
+      return copy;
+    });
+  };
+
   const toggleAlat = (alatId: string) => {
     setAlat((prev) =>
       prev.includes(alatId)
@@ -96,94 +156,156 @@ export const AnalisisForm: React.FC<AnalisisFormProps> = ({
     );
   };
 
-  // Tambah kata cepat ke textarea tanda rusak tanpa duplikasi
-  const handleAddQuickTag = (tag: string) => {
-    const trimmedCurrent = kondisiDetail.trim();
+  const handleAddQuickTag = (itemId: string, tag: string) => {
+    const item = items.find((it) => it.id === itemId);
+    if (!item) return;
+
+    const trimmedCurrent = item.kondisiDetail.trim();
     if (!trimmedCurrent) {
-      setKondisiDetail(tag);
+      updateItem(itemId, "kondisiDetail", tag);
       return;
     }
 
-    // Cek apakah kata sudah ada di textarea
     const regex = new RegExp(`\\b${tag}\\b`, "i");
     if (!regex.test(trimmedCurrent)) {
-      setKondisiDetail(`${trimmedCurrent}, ${tag}`);
+      updateItem(itemId, "kondisiDetail", `${trimmedCurrent}, ${tag}`);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newErrors: {
-      nama?: string;
-      jumlah?: string;
-      kondisiDetail?: string;
-    } = {};
+    const newItemErrors: Record<
+      string,
+      { nama?: string; jumlah?: string; kondisiDetail?: string }
+    > = {};
 
-    // Validasi Nama Bahan: 2 - 80 karakter
-    const trimmedNama = nama.trim();
-    if (!trimmedNama || trimmedNama.length < 2) {
-      newErrors.nama = "Nama bahan minimal 2 karakter.";
-    } else if (trimmedNama.length > 80) {
-      newErrors.nama = "Nama bahan maksimal 80 karakter.";
-    }
+    // Cek nama kembar
+    const seenNames = new Map<string, string>(); // lowerNama -> itemId
 
-    // Validasi Jumlah: angka positif
-    if (isNaN(jumlah) || jumlah <= 0) {
-      newErrors.jumlah = "Jumlah harus lebih besar dari 0.";
-    }
+    items.forEach((item) => {
+      const errorsForItem: {
+        nama?: string;
+        jumlah?: string;
+        kondisiDetail?: string;
+      } = {};
 
-    // Validasi Kondisi Bahan
-    let finalKondisiString = "";
-    if (kondisiPilihan === "segar") {
-      finalKondisiString = "Masih segar, belum ada tanda kerusakan";
-    } else if (kondisiPilihan === "layu") {
-      finalKondisiString = "Mulai layu atau matang berlebih, belum berjamur atau berbau busuk";
-    } else {
-      const trimmedDetail = kondisiDetail.trim();
-      if (!trimmedDetail || trimmedDetail.length < 3) {
-        newErrors.kondisiDetail = "Ceritakan tanda kerusakan minimal 3 karakter.";
+      const trimmedNama = item.nama.trim();
+      const lowerNama = trimmedNama.toLowerCase();
+
+      // 1. Validasi Nama
+      if (!trimmedNama || trimmedNama.length < 2) {
+        errorsForItem.nama = "Nama bahan minimal 2 karakter.";
+      } else if (trimmedNama.length > 80) {
+        errorsForItem.nama = "Nama bahan maksimal 80 karakter.";
+      } else if (seenNames.has(lowerNama)) {
+        errorsForItem.nama = "Nama bahan tidak boleh kembar.";
+      } else {
+        seenNames.set(lowerNama, item.id);
       }
-      finalKondisiString = `Sudah ada tanda rusak: ${trimmedDetail}`;
-    }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      // Auto-focus ke field pertama yang salah
-      if (newErrors.nama) {
-        namaRef.current?.focus();
-      } else if (newErrors.jumlah) {
-        jumlahRef.current?.focus();
-      } else if (newErrors.kondisiDetail) {
-        kondisiDetailRef.current?.focus();
+      // 2. Validasi Jumlah
+      if (isNaN(item.jumlah) || item.jumlah <= 0) {
+        errorsForItem.jumlah = "Jumlah harus lebih besar dari 0.";
+      }
+
+      // 3. Validasi Kondisi
+      if (item.kondisiPilihan === "rusak") {
+        const trimmedDetail = item.kondisiDetail.trim();
+        if (!trimmedDetail || trimmedDetail.length < 3) {
+          errorsForItem.kondisiDetail =
+            "Ceritakan tanda kerusakan minimal 3 karakter.";
+        }
+      }
+
+      if (Object.keys(errorsForItem).length > 0) {
+        newItemErrors[item.id] = errorsForItem;
+      }
+    });
+
+    if (Object.keys(newItemErrors).length > 0) {
+      setItemErrors(newItemErrors);
+      // Auto-fokus ke elemen pertama yang salah
+      const firstErrorItemId = items.find((it) => newItemErrors[it.id])?.id;
+      if (firstErrorItemId) {
+        const itemErr = newItemErrors[firstErrorItemId];
+        const refs = inputRefs.current[firstErrorItemId];
+        if (itemErr.nama && refs?.nama) {
+          refs.nama.focus();
+        } else if (itemErr.jumlah && refs?.jumlah) {
+          refs.jumlah.focus();
+        } else if (itemErr.kondisiDetail && refs?.kondisiDetail) {
+          refs.kondisiDetail.focus();
+        }
       }
       return;
     }
 
-    // Bersihkan error jika valid
-    setErrors({});
+    // Bersihkan error jika lolos validasi
+    setItemErrors({});
 
-    // Susun payload sesuai kontrak API
-    const finalAlat = alat.length > 0 ? alat : ["tanpa_alat"];
-    const payload: InputAnalisis = {
-      nama: trimmedNama,
-      jumlah: Number(jumlah),
-      satuan,
-      kondisi: finalKondisiString,
-      tipe: "rumah_tangga",
-      alat: finalAlat as InputAnalisis["alat"],
-    };
+    const finalAlat =
+      alat.length > 0
+        ? (alat as InputAnalisis["alat"])
+        : (["tanpa_alat"] as InputAnalisis["alat"]);
 
     const currentFormState: FormValues = {
-      nama,
-      jumlah,
-      satuan,
-      kondisiPilihan,
-      kondisiDetail,
+      items,
       alat,
     };
 
-    onSubmit(payload, currentFormState);
+    if (items.length === 1) {
+      // Mode 1 bahan: kirim persis ke POST /api/analisis
+      const item = items[0];
+      let finalKondisi = "";
+      if (item.kondisiPilihan === "segar") {
+        finalKondisi = "Masih segar, belum ada tanda kerusakan";
+      } else if (item.kondisiPilihan === "layu") {
+        finalKondisi =
+          "Mulai layu atau matang berlebih, belum berjamur atau berbau busuk";
+      } else {
+        finalKondisi = `Sudah ada tanda rusak: ${item.kondisiDetail.trim()}`;
+      }
+
+      const payload: InputAnalisis = {
+        nama: item.nama.trim(),
+        jumlah: Number(item.jumlah),
+        satuan: item.satuan,
+        kondisi: finalKondisi,
+        tipe: "rumah_tangga",
+        alat: finalAlat,
+      };
+
+      onSubmit({ mode: "single", payload }, currentFormState);
+    } else {
+      // Mode 2+ bahan: kirim ke POST /api/analisis-multi
+      const daftarBahan = items.map((item) => {
+        let finalKondisi = "";
+        if (item.kondisiPilihan === "segar") {
+          finalKondisi = "Masih segar, belum ada tanda kerusakan";
+        } else if (item.kondisiPilihan === "layu") {
+          finalKondisi =
+            "Mulai layu atau matang berlebih, belum berjamur atau berbau busuk";
+        } else {
+          finalKondisi = `Sudah ada tanda rusak: ${item.kondisiDetail.trim()}`;
+        }
+
+        return {
+          nama: item.nama.trim(),
+          jumlah: Number(item.jumlah),
+          satuan: item.satuan,
+          kondisi: finalKondisi,
+        };
+      });
+
+      const payload: InputMulti = {
+        bahan: daftarBahan,
+        tipe: "rumah_tangga",
+        alat: finalAlat,
+      };
+
+      onSubmit({ mode: "multi", payload }, currentFormState);
+    }
   };
 
   return (
@@ -194,167 +316,241 @@ export const AnalisisForm: React.FC<AnalisisFormProps> = ({
           Bahan apa yang tersisa?
         </h1>
         <p className="text-muted text-sm sm:text-base mt-2">
-          Ketahui cara mengolahnya jadi masakan bernilai dan aman.
+          Masukkan 1 hingga 5 bahan. Ketahui cara mengolahnya jadi masakan bernilai dan aman.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
-        {/* Field 1: Nama Bahan */}
-        <div>
-          <Input
-            ref={namaRef}
-            id="nama-bahan"
-            label="Nama Bahan"
-            placeholder="contoh: pisang kepok"
-            value={nama}
-            onChange={(e) => {
-              setNama(e.target.value);
-              if (errors.nama) setErrors((prev) => ({ ...prev, nama: undefined }));
-            }}
-            error={errors.nama}
-            maxLength={80}
-            required
-            aria-required="true"
-            autoComplete="off"
-          />
-        </div>
-
-        {/* Field 2: Jumlah & Takaran (2 kolom sejajar di semua viewport) */}
-        <div>
-          <label className="block text-sm font-semibold text-ink mb-2">
-            Jumlah & Takaran
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Input
-                ref={jumlahRef}
-                id="jumlah-bahan"
-                type="number"
-                min={0.1}
-                step={0.1}
-                value={isNaN(jumlah) ? "" : jumlah}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  setJumlah(val);
-                  if (errors.jumlah) setErrors((prev) => ({ ...prev, jumlah: undefined }));
-                }}
-                error={errors.jumlah}
-                required
-                aria-required="true"
-                aria-label="Jumlah bahan"
-              />
-            </div>
-            <div>
-              <Select
-                id="satuan-bahan"
-                value={satuan}
-                onChange={(e) => setSatuan(e.target.value as FormValues["satuan"])}
-                options={[
-                  { value: "kg", label: "kg" },
-                  { value: "gram", label: "gram" },
-                  { value: "buah", label: "buah" },
-                  { value: "porsi", label: "porsi" },
-                  { value: "liter", label: "liter" },
-                  { value: "ikat", label: "ikat" },
-                ]}
-                aria-label="Satuan takaran"
-              />
-            </div>
+        {/* Bagian Bahan yang Tersisa */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-semibold text-ink">
+              Bahan yang tersisa ({items.length}/5)
+            </label>
           </div>
-        </div>
 
-        {/* Field 3: Kondisi Bahan (3 chip besar radio) */}
-        <div>
-          <label
-            id="label-kondisi"
-            className="block text-sm font-semibold text-ink mb-2"
-          >
-            Kondisi Bahan
-          </label>
-          <div
-            role="radiogroup"
-            aria-labelledby="label-kondisi"
-            className="flex flex-col gap-2.5"
-          >
-            {KONDISI_OPTIONS.map((opt) => {
-              const isSelected = kondisiPilihan === opt.id;
+          {/* Daftar Baris Bahan */}
+          <div className="flex flex-col gap-5">
+            {items.map((item, index) => {
+              const errs = itemErrors[item.id] || {};
+
               return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={isSelected}
-                  onClick={() => {
-                    setKondisiPilihan(opt.id);
-                    if (errors.kondisiDetail) {
-                      setErrors((prev) => ({ ...prev, kondisiDetail: undefined }));
-                    }
-                  }}
-                  className={`w-full text-left px-5 py-3.5 rounded-2xl flex items-center justify-between text-sm sm:text-base transition-all duration-200 cursor-pointer min-h-[48px] ${
-                    isSelected
-                      ? "bg-primary text-white font-semibold shadow-xs"
-                      : "bg-surface text-ink hover:bg-black/[0.04] border border-transparent"
-                  }`}
+                <div
+                  key={item.id}
+                  className="p-4 sm:p-5 rounded-2xl bg-surface border border-black/[0.04] flex flex-col gap-4 relative animate-fade-in"
                 >
-                  <span>{opt.label}</span>
-                  {isSelected && (
-                    <CheckCircle2 className="w-5 h-5 text-white shrink-0 ml-2" />
-                  )}
-                </button>
+                  {/* Header baris bahan */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted">
+                      Bahan #{index + 1}
+                    </span>
+
+                    {items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleHapusBahan(item.id)}
+                        aria-label={`Hapus bahan ke-${index + 1}`}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-full text-muted hover:text-danger hover:bg-rose-50 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 1. Nama Bahan */}
+                  <div>
+                    <Input
+                      ref={(el) => {
+                        if (!inputRefs.current[item.id]) {
+                          inputRefs.current[item.id] = {};
+                        }
+                        inputRefs.current[item.id].nama = el;
+                      }}
+                      id={`nama-bahan-${item.id}`}
+                      label="Nama Bahan"
+                      placeholder="contoh: pisang kepok"
+                      value={item.nama}
+                      onChange={(e) =>
+                        updateItem(item.id, "nama", e.target.value)
+                      }
+                      error={errs.nama}
+                      maxLength={80}
+                      required
+                      aria-required="true"
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  {/* 2. Jumlah & Takaran (2 kolom sejajar) */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-ink mb-1.5">
+                      Jumlah & Takaran
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Input
+                          ref={(el) => {
+                            if (!inputRefs.current[item.id]) {
+                              inputRefs.current[item.id] = {};
+                            }
+                            inputRefs.current[item.id].jumlah = el;
+                          }}
+                          id={`jumlah-bahan-${item.id}`}
+                          type="number"
+                          min={0.1}
+                          step={0.1}
+                          value={isNaN(item.jumlah) ? "" : item.jumlah}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            updateItem(item.id, "jumlah", val);
+                          }}
+                          error={errs.jumlah}
+                          required
+                          aria-required="true"
+                          aria-label={`Jumlah bahan ke-${index + 1}`}
+                        />
+                      </div>
+                      <div>
+                        <Select
+                          id={`satuan-bahan-${item.id}`}
+                          value={item.satuan}
+                          onChange={(e) =>
+                            updateItem(
+                              item.id,
+                              "satuan",
+                              e.target.value as ItemBahanForm["satuan"]
+                            )
+                          }
+                          options={[
+                            { value: "kg", label: "kg" },
+                            { value: "gram", label: "gram" },
+                            { value: "buah", label: "buah" },
+                            { value: "porsi", label: "porsi" },
+                            { value: "liter", label: "liter" },
+                            { value: "ikat", label: "ikat" },
+                          ]}
+                          aria-label={`Satuan takaran bahan ke-${index + 1}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Kondisi Bahan (3 chip radio) */}
+                  <div>
+                    <label
+                      id={`label-kondisi-${item.id}`}
+                      className="block text-xs sm:text-sm font-semibold text-ink mb-1.5"
+                    >
+                      Kondisi Bahan
+                    </label>
+                    <div
+                      role="radiogroup"
+                      aria-labelledby={`label-kondisi-${item.id}`}
+                      className="flex flex-col gap-2"
+                    >
+                      {KONDISI_OPTIONS.map((opt) => {
+                        const isSelected = item.kondisiPilihan === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={isSelected}
+                            onClick={() => {
+                              updateItem(item.id, "kondisiPilihan", opt.id);
+                            }}
+                            className={`w-full text-left px-4 py-3 rounded-xl flex items-center justify-between text-xs sm:text-sm transition-all duration-200 cursor-pointer min-h-[44px] ${
+                              isSelected
+                                ? "bg-primary text-white font-semibold shadow-xs"
+                                : "bg-white text-ink hover:bg-black/[0.04] border border-black/[0.06]"
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                            {isSelected && (
+                              <CheckCircle2 className="w-4 h-4 text-white shrink-0 ml-2" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Sub-field Textarea jika pilih "Sudah ada tanda rusak" */}
+                    {item.kondisiPilihan === "rusak" && (
+                      <div className="mt-3 p-3.5 rounded-xl bg-white border border-black/[0.06] animate-fade-in">
+                        <label
+                          htmlFor={`kondisi-detail-${item.id}`}
+                          className="block text-xs font-semibold text-ink mb-1"
+                        >
+                          Ceritakan tandanya <span className="text-danger">*</span>
+                        </label>
+                        <textarea
+                          ref={(el) => {
+                            if (!inputRefs.current[item.id]) {
+                              inputRefs.current[item.id] = {};
+                            }
+                            inputRefs.current[item.id].kondisiDetail = el;
+                          }}
+                          id={`kondisi-detail-${item.id}`}
+                          rows={2}
+                          value={item.kondisiDetail}
+                          placeholder="contoh: berjamur, berbau busuk, berlendir"
+                          onChange={(e) =>
+                            updateItem(item.id, "kondisiDetail", e.target.value)
+                          }
+                          className={`w-full rounded-lg bg-surface px-3 py-2 text-xs sm:text-sm text-ink placeholder:text-muted/60 border border-black/[0.08] focus:border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
+                            errs.kondisiDetail
+                              ? "border-danger focus:ring-danger/20"
+                              : ""
+                          }`}
+                        />
+                        {errs.kondisiDetail && (
+                          <p className="mt-1 text-xs text-danger font-medium">
+                            {errs.kondisiDetail}
+                          </p>
+                        )}
+
+                        {/* Chip Pengisi Cepat */}
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <span className="text-[11px] text-muted font-medium">
+                            Pengisi cepat:
+                          </span>
+                          {QUICK_TAGS.map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => handleAddQuickTag(item.id, tag)}
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-surface text-ink border border-black/[0.08] hover:border-primary hover:text-primary transition-colors cursor-pointer active:scale-95"
+                            >
+                              + {tag}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
 
-          {/* Sub-field Textarea jika pilih "Sudah ada tanda rusak" */}
-          {kondisiPilihan === "rusak" && (
-            <div className="mt-3.5 p-4 rounded-2xl bg-surface border border-black/[0.04] animate-fade-in">
-              <label
-                htmlFor="kondisi-detail"
-                className="block text-xs sm:text-sm font-semibold text-ink mb-1.5"
-              >
-                Ceritakan tandanya <span className="text-danger">*</span>
-              </label>
-              <textarea
-                ref={kondisiDetailRef}
-                id="kondisi-detail"
-                rows={2}
-                value={kondisiDetail}
-                placeholder="contoh: berjamur, berbau busuk, berlendir"
-                onChange={(e) => {
-                  setKondisiDetail(e.target.value);
-                  if (errors.kondisiDetail) {
-                    setErrors((prev) => ({ ...prev, kondisiDetail: undefined }));
-                  }
-                }}
-                className={`w-full rounded-xl bg-white px-3.5 py-2.5 text-xs sm:text-sm text-ink placeholder:text-muted/60 border border-black/[0.08] focus:border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all ${
-                  errors.kondisiDetail ? "border-danger focus:ring-danger/20" : ""
-                }`}
-              />
-              {errors.kondisiDetail && (
-                <p className="mt-1 text-xs text-danger font-medium">
-                  {errors.kondisiDetail}
-                </p>
-              )}
-
-              {/* 3 Chip Kecil Pengisi Cepat */}
-              <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                <span className="text-xs text-muted font-medium">Pengisi cepat:</span>
-                {QUICK_TAGS.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => handleAddQuickTag(tag)}
-                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-white text-ink border border-black/[0.08] hover:border-primary hover:text-primary transition-colors cursor-pointer active:scale-95"
-                  >
-                    + {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Tombol Tambah Bahan */}
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            fullWidth
+            disabled={items.length >= 5}
+            onClick={handleTambahBahan}
+            className="border-dashed border-2 border-primary/30 text-primary hover:bg-primary-soft hover:border-primary/50 transition-all font-semibold py-3"
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            <span>
+              {items.length >= 5 ? "Maksimal 5 bahan" : "+ Tambah bahan"}
+            </span>
+          </Button>
         </div>
 
-        {/* Field 4: Alat Dapur yang Ada (Chip multi-pilih dengan ikon) */}
+        {/* Alat Dapur yang Ada (Chip multi-pilih, satu untuk semua bahan) */}
         <div>
           <label className="block text-sm font-semibold text-ink mb-2">
             Alat Dapur yang Ada
@@ -383,7 +579,7 @@ export const AnalisisForm: React.FC<AnalisisFormProps> = ({
           </div>
         </div>
 
-        {/* Kotak Error Server jika analisis gagal */}
+        {/* Kotak Error Server */}
         {serverError && (
           <div
             role="alert"

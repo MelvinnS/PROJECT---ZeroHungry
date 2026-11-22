@@ -6,14 +6,11 @@ import {
 } from "@/lib/schemas";
 import { SYSTEM_PROMPT, buildUserMessage } from "@/lib/prompts";
 import { getFallbackResult } from "@/lib/fallback";
+import { panggilGeminiRantai } from "@/lib/gemini";
 
 // Konfigurasi runtime Node.js dan durasi maksimum eksekusi (60 detik)
 export const runtime = "nodejs";
 export const maxDuration = 60;
-
-// Konstanta model Google Gemini dan timeout panggilan REST (45 detik)
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const API_TIMEOUT_MS = 45000;
 
 /**
  * Fungsi pembantu untuk membuat delay buatan acak (700 - 1200 ms)
@@ -84,135 +81,14 @@ export async function POST(request: Request) {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // Langkah 4: Mode Live diizinkan -> Jalankan Google Gemini via REST Fetch
+    // Langkah 4: Mode Live diizinkan -> Jalankan Google Gemini via helper rantai model
     // ─────────────────────────────────────────────────────────────
     const userMessageContent = buildUserMessage(inputData);
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-
-    const payload = {
-      systemInstruction: {
-        parts: [{ text: SYSTEM_PROMPT }],
-      },
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: userMessageContent }],
-        },
-      ],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.4,
-        maxOutputTokens: 6000,
-        thinkingConfig: {
-          thinkingBudget: 0,
-        },
-      },
-    };
-
-    const MAX_ATTEMPTS = 2;
-    let parsedHasil: HasilAnalisis | null = null;
-
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      const startTime = Date.now();
-
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": apiKey!,
-          },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(API_TIMEOUT_MS),
-        });
-
-        const durationMs = Date.now() - startTime;
-
-        if (!res.ok) {
-          console.log(`[Gemini] model=${MODEL} durasi=${durationMs}ms hasil=http_${res.status}`);
-          // Jangan ulangi untuk error HTTP (401, 403, 404, 429, 500), langsung fallback
-          break;
-        }
-
-        const data = (await res.json()) as {
-          candidates?: Array<{
-            content?: { parts?: Array<{ text?: string }> };
-            finishReason?: string;
-          }>;
-        };
-
-        const candidate = data.candidates?.[0];
-        const finishReason = candidate?.finishReason;
-
-        // Jika MAX_TOKENS atau respons kosong/terblokir, anggap gagal
-        if (finishReason === "MAX_TOKENS") {
-          console.log(`[Gemini] model=${MODEL} durasi=${durationMs}ms hasil=max_tokens`);
-          break;
-        }
-
-        const textContent =
-          candidate?.content?.parts?.map((p) => p.text || "").join("") || "";
-
-        if (!textContent.trim()) {
-          console.log(`[Gemini] model=${MODEL} durasi=${durationMs}ms hasil=empty`);
-          break;
-        }
-
-        // Bersihkan pagar kode markdown jika ada dan ekstrak objek JSON
-        const cleaned = textContent
-          .replace(/```(?:json)?/gi, "")
-          .replace(/```/g, "")
-          .trim();
-
-        const firstBrace = cleaned.indexOf("{");
-        const lastBrace = cleaned.lastIndexOf("}");
-
-        if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-          console.log(`[Gemini] model=${MODEL} durasi=${durationMs}ms hasil=parse`);
-          // Hanya satu kali ulang untuk kegagalan parse
-          if (attempt < MAX_ATTEMPTS) continue;
-          break;
-        }
-
-        let parsedJson: unknown;
-        try {
-          const jsonString = cleaned.substring(firstBrace, lastBrace + 1);
-          parsedJson = JSON.parse(jsonString);
-        } catch {
-          console.log(`[Gemini] model=${MODEL} durasi=${durationMs}ms hasil=parse`);
-          // Hanya satu kali ulang untuk kegagalan parse
-          if (attempt < MAX_ATTEMPTS) continue;
-          break;
-        }
-
-        // Validasi ketat hasil dengan HasilAnalisisSchema
-        const parseHasilResult = HasilAnalisisSchema.safeParse(parsedJson);
-        if (!parseHasilResult.success) {
-          console.log(`[Gemini] model=${MODEL} durasi=${durationMs}ms hasil=zod`);
-          // Hanya satu kali ulang untuk kegagalan zod
-          if (attempt < MAX_ATTEMPTS) continue;
-          break;
-        }
-
-        // Sukses
-        console.log(`[Gemini] model=${MODEL} durasi=${durationMs}ms hasil=ok`);
-        parsedHasil = parseHasilResult.data;
-        break;
-      } catch (error: unknown) {
-        const durationMs = Date.now() - startTime;
-        const errMsg = error instanceof Error ? error.message : String(error);
-        const isTimeout =
-          (error instanceof Error && error.name === "TimeoutError") ||
-          errMsg.toLowerCase().includes("timeout") ||
-          errMsg.toLowerCase().includes("aborted");
-
-        const hasilLabel = isTimeout ? "timeout" : "error";
-        console.log(`[Gemini] model=${MODEL} durasi=${durationMs}ms hasil=${hasilLabel}`);
-
-        // Jangan ulangi untuk timeout / network error, langsung fallback
-        break;
-      }
-    }
+    const parsedHasil = await panggilGeminiRantai<HasilAnalisis>({
+      systemPrompt: SYSTEM_PROMPT,
+      userMessage: userMessageContent,
+      validasi: (json) => HasilAnalisisSchema.safeParse(json),
+    });
 
     // Jika pemanggilan live berhasil
     if (parsedHasil) {
