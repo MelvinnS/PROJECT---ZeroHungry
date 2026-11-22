@@ -128,6 +128,7 @@ export const KalkulatorClient: React.FC = () => {
           header,
           footer,
           nav,
+          aside,
           .no-print {
             display: none !important;
           }
