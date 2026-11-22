@@ -14,6 +14,7 @@ import {
 import type { RiwayatItem } from "@/lib/riwayat";
 import { StatusBadge } from "./StatusBadge";
 import { IdeOlahanCard } from "@/components/coba-cepat/IdeOlahanCard";
+import { ChefChat } from "@/components/chef/ChefChat";
 
 interface DetailRiwayatClientProps {
   riwayat: RiwayatItem;
@@ -304,6 +305,30 @@ export const DetailRiwayatClient: React.FC<DetailRiwayatClientProps> = ({
           </button>
         )}
       </div>
+
+      {/* ChefChat (mono, hanya jika bahan aman atau waspada) */}
+      {!isTidakAman && (
+        <ChefChat
+          mono={true}
+          konteks={{
+            bahan: [
+              {
+                nama: hasil.bahan.nama_standar,
+                keamanan: hasil.keamanan.aman_dikonsumsi,
+                sisa:
+                  hasil.umur_simpan.hari_min === 0 && hasil.umur_simpan.hari_maks === 0
+                    ? "tidak layak disimpan"
+                    : `${hasil.umur_simpan.hari_min}–${hasil.umur_simpan.hari_maks} hari`,
+              },
+            ],
+          }}
+          daftarResep={hasil.ide_olahan.map((ide) => ({
+            nama: ide.nama,
+            bahan_tambahan: ide.bahan_tambahan,
+            langkah: ide.langkah,
+          }))}
+        />
+      )}
     </div>
   );
 };

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { IdeOlahanCard } from "./IdeOlahanCard";
+import { ChefChat } from "@/components/chef/ChefChat";
 import type { HasilMulti, InputMulti } from "@/lib/schemas-multi";
 import { toInputTunggal, toHasilTunggal } from "@/lib/multi-ke-tunggal";
 
@@ -399,6 +400,27 @@ export const HasilMultiView: React.FC<HasilMultiViewProps> = ({
             Daftar Gratis
           </Button>
         </div>
+      )}
+
+      {/* ChefChat: tampilkan hanya jika ada bahan aman/waspada */}
+      {adaBahanAman && (
+        <ChefChat
+          konteks={{
+            bahan: data.bahan.map((b) => ({
+              nama: b.nama_standar,
+              keamanan: b.keamanan.aman_dikonsumsi,
+              sisa:
+                b.umur_simpan.hari_min === 0 && b.umur_simpan.hari_maks === 0
+                  ? "tidak layak disimpan"
+                  : `${b.umur_simpan.hari_min}–${b.umur_simpan.hari_maks} hari`,
+            })),
+          }}
+          daftarResep={(data.ide_olahan || []).map((ide) => ({
+            nama: ide.nama,
+            bahan_tambahan: ide.bahan_tambahan,
+            langkah: ide.langkah,
+          }))}
+        />
       )}
     </div>
   );

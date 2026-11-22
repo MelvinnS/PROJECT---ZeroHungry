@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { IdeOlahanCard } from "./IdeOlahanCard";
+import { ChefChat } from "@/components/chef/ChefChat";
 import type { HasilAnalisis as HasilAnalisisType, InputAnalisis } from "@/lib/schemas";
 
 interface HasilAnalisisProps {
@@ -331,6 +332,29 @@ export const HasilAnalisis: React.FC<HasilAnalisisProps> = ({
             </Button>
           </div>
         </>
+      )}
+
+      {/* ChefChat: hanya jika bahan AMAN atau WASPADA */}
+      {!isTidakAman && (
+        <ChefChat
+          konteks={{
+            bahan: [
+              {
+                nama: data.bahan.nama_standar,
+                keamanan: data.keamanan.aman_dikonsumsi,
+                sisa:
+                  data.umur_simpan.hari_min === 0 && data.umur_simpan.hari_maks === 0
+                    ? "tidak layak disimpan"
+                    : `${data.umur_simpan.hari_min}–${data.umur_simpan.hari_maks} hari`,
+              },
+            ],
+          }}
+          daftarResep={data.ide_olahan.map((ide) => ({
+            nama: ide.nama,
+            bahan_tambahan: ide.bahan_tambahan,
+            langkah: ide.langkah,
+          }))}
+        />
       )}
     </div>
   );
