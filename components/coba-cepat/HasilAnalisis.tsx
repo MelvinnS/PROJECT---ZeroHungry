@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -9,26 +10,70 @@ import {
   Info,
   Clock,
   Sparkles,
+  BookmarkPlus,
   BookmarkCheck,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { IdeOlahanCard } from "./IdeOlahanCard";
-import type { HasilAnalisis as HasilAnalisisType } from "@/lib/schemas";
+import type { HasilAnalisis as HasilAnalisisType, InputAnalisis } from "@/lib/schemas";
 
 interface HasilAnalisisProps {
   data: HasilAnalisisType;
+  inputPayload?: InputAnalisis | null;
   source: "live" | "fallback" | null;
+  isLoggedIn?: boolean;
   onReset: () => void;
 }
 
 export const HasilAnalisis: React.FC<HasilAnalisisProps> = ({
   data,
+  inputPayload,
   source,
+  isLoggedIn = false,
   onReset,
 }) => {
   // Hanya satu kartu accordion ide olahan yang terbuka sekali waktu
   const [openCardIndex, setOpenCardIndex] = useState<number | null>(0);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
+
+  const handleSimpanRiwayat = async () => {
+    if (!inputPayload || saveStatus === "saving" || saveStatus === "saved") {
+      return;
+    }
+
+    setSaveStatus("saving");
+    setSaveErrorMessage(null);
+
+    try {
+      const res = await fetch("/api/riwayat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          input: inputPayload,
+          hasil: data,
+          source: source === "live" ? "live" : "fallback",
+        }),
+      });
+
+      if (res.ok) {
+        setSaveStatus("saved");
+      } else {
+        const errJson = await res.json().catch(() => null);
+        console.error("Gagal menyimpan riwayat:", errJson);
+        setSaveErrorMessage("Gagal menyimpan, coba lagi.");
+        setSaveStatus("error");
+      }
+    } catch (err) {
+      console.error("Error jaringan saat menyimpan riwayat:", err);
+      setSaveErrorMessage("Gagal menyimpan, coba lagi.");
+      setSaveStatus("error");
+    }
+  };
 
   const handleToggleCard = (index: number) => {
     setOpenCardIndex((prev) => (prev === index ? null : index));
@@ -128,6 +173,51 @@ export const HasilAnalisis: React.FC<HasilAnalisisProps> = ({
             </p>
           )}
         </div>
+
+        {/* Tombol Simpan ke Riwayat (Hanya jika pengguna login) */}
+        {isLoggedIn && (
+          <div className="mt-5 pt-4 border-t border-black/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {saveStatus === "saved" ? (
+              <div className="flex items-center flex-wrap gap-2.5">
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-primary-soft text-primary border border-primary/20 opacity-90 cursor-default"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Tersimpan</span>
+                </button>
+                <Link
+                  href="/dashboard"
+                  className="text-xs font-semibold text-primary hover:underline hover:text-[#15542d] transition-colors"
+                >
+                  Lihat dashboard &rarr;
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  disabled={saveStatus === "saving" || !inputPayload}
+                  onClick={handleSimpanRiwayat}
+                  className="inline-flex items-center gap-2 w-fit border-primary text-primary hover:bg-primary-soft"
+                >
+                  <BookmarkPlus className="w-4 h-4" />
+                  <span>
+                    {saveStatus === "saving" ? "Menyimpan…" : "Simpan ke Riwayat"}
+                  </span>
+                </Button>
+                {saveErrorMessage && (
+                  <p className="text-xs text-danger font-medium">
+                    {saveErrorMessage}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 2) JIKA TIDAK AMAN: Tampilkan Kotak Larangan Konsumsi & Selesai */}

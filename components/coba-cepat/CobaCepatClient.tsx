@@ -17,10 +17,12 @@ const DEFAULT_FORM_VALUES: FormValues = {
 
 interface CobaCepatClientProps {
   initialNama?: string;
+  isLoggedIn?: boolean;
 }
 
 export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
   initialNama = "",
+  isLoggedIn = false,
 }) => {
   const formattedNama = initialNama
     ? initialNama.charAt(0).toUpperCase() + initialNama.slice(1)
@@ -31,6 +33,7 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
     ...DEFAULT_FORM_VALUES,
     nama: formattedNama,
   });
+  const [submittedPayload, setSubmittedPayload] = useState<InputAnalisis | null>(null);
   const [hasil, setHasil] = useState<HasilAnalisisType | null>(null);
   const [source, setSource] = useState<"live" | "fallback" | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -54,6 +57,7 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
   ) => {
     setServerError(null);
     setFormValues(currentFormState);
+    setSubmittedPayload(payload);
     setTampilan("loading");
     scrollToTop();
 
@@ -112,6 +116,7 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
   // Reset form untuk menganalisis bahan lain dari awal
   const handleReset = () => {
     setFormValues(DEFAULT_FORM_VALUES);
+    setSubmittedPayload(null);
     setHasil(null);
     setSource(null);
     setServerError(null);
@@ -135,7 +140,9 @@ export const CobaCepatClient: React.FC<CobaCepatClientProps> = ({
       {tampilan === "hasil" && hasil && (
         <HasilAnalisis
           data={hasil}
+          inputPayload={submittedPayload}
           source={source}
+          isLoggedIn={isLoggedIn}
           onReset={handleReset}
         />
       )}
