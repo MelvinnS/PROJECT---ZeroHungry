@@ -1,0 +1,25 @@
+﻿{
+  "name": "zerohungry",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "npm@11.16.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:user": "turbo run dev --filter=@zerohungry/user",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "verify:chef": "tsx scripts/verify-chef.ts",
+    "verify:fallback": "tsx scripts/verify-fallback.ts",
+    "verify:kalkulator": "tsx scripts/verify-kalkulator.ts",
+    "verify:multi": "tsx scripts/verify-multi.ts",
+    "verify:skor": "tsx scripts/verify-skor.ts"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.13",
+    "tsx": "^4.23.15"
+  }
+}
