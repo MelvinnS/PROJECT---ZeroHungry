@@ -1,5 +1,5 @@
 import React from "react";
-import { Logo } from "@/components/Logo";
+import { Logo } from "@/components/ui/Logo";
 
 export const Footer: React.FC = () => {
   return (

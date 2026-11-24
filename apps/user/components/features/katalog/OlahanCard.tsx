@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Clock } from "lucide-react";
 import { Olahan } from "@/lib/katalog-data";
 import { Badge } from "@/components/ui/Badge";
-import { FoodImage } from "@/components/FoodImage";
+import { FoodImage } from "@/components/ui/FoodImage";
 
 interface OlahanCardProps {
   olahan: Olahan;

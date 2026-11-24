@@ -11,7 +11,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { OLAHAN, getOlahanBySlug } from "@/lib/katalog-data";
-import { FoodImage } from "@/components/FoodImage";
+import { FoodImage } from "@/components/ui/FoodImage";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";

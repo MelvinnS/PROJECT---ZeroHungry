@@ -33,20 +33,47 @@ Aplikasi ini dilengkapi dengan arsitektur **Mode Cadangan Cerdas (Smart Fallback
 
 ---
 
+## Struktur Monorepo
+
+```
+zerohungry/
+├── apps/
+│   └── user/          → @zerohungry/user (Next.js — app utama pengguna)
+├── packages/          → shared packages (akan datang)
+├── scripts/           → script verifikasi & utilitas
+├── supabase/          → skema SQL Supabase
+├── turbo.json         → konfigurasi Turborepo
+└── package.json       → workspace root
+```
+
+Proyek ini menggunakan **npm workspaces** dan **Turborepo** untuk mengelola monorepo.
+
+---
+
 ## Menjalankan Project
 
-1. **Install dependensi:**
+1. **Install dependensi** (dari root):
    ```bash
    npm install
    ```
 
 2. **Jalankan script verifikasi data cadangan:**
    ```bash
-   npx tsx scripts/verify-fallback.ts
+   npm run verify:fallback
    ```
 
-3. **Jalankan server pengembangan (Dev Server):**
+3. **Jalankan server pengembangan app User:**
    ```bash
-   npm run dev
+   npm run dev:user
    ```
    Buka `http://localhost:3000` di peramban Anda.
+
+4. **Build seluruh workspace:**
+   ```bash
+   npm run build
+   ```
+
+5. **Type-check seluruh workspace:**
+   ```bash
+   npm run typecheck
+   ```
