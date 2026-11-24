@@ -38,15 +38,16 @@ Aplikasi ini dilengkapi dengan arsitektur **Mode Cadangan Cerdas (Smart Fallback
 ```
 zerohungry/
 ├── apps/
-│   └── user/          → @zerohungry/user (Next.js — app utama pengguna)
-├── packages/          → shared packages (akan datang)
+│   ├── user/          → @zerohungry/user (Next.js — port 3000, app utama pengguna)
+│   └── admin/         → @zerohungry/admin (Next.js — port 3001, panel admin)
+├── docs/              → dokumentasi arsitektur, database, environment, workflow
 ├── scripts/           → script verifikasi & utilitas
 ├── supabase/          → skema SQL Supabase
 ├── turbo.json         → konfigurasi Turborepo
 └── package.json       → workspace root
 ```
 
-Proyek ini menggunakan **npm workspaces** dan **Turborepo** untuk mengelola monorepo.
+Proyek ini menggunakan **npm workspaces** dan **Turborepo** untuk mengelola monorepo. Dokumentasi lengkap tersedia di [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/WORKFLOW.md](docs/WORKFLOW.md), [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md), dan [docs/DATABASE.md](docs/DATABASE.md).
 
 ---
 
@@ -57,23 +58,33 @@ Proyek ini menggunakan **npm workspaces** dan **Turborepo** untuk mengelola mono
    npm install
    ```
 
-2. **Jalankan script verifikasi data cadangan:**
+2. **Jalankan server pengembangan:**
+   - **App User saja** (`http://localhost:3000`):
+     ```bash
+     npm run dev:user
+     ```
+   - **App Admin saja** (`http://localhost:3001`):
+     ```bash
+     npm run dev:admin
+     ```
+   - **User + Admin bersamaan**:
+     ```bash
+     npm run dev
+     ```
+
+3. **Build, Lint, Typecheck & Clean:**
+   ```bash
+   npm run build        # build semua app (atau build:user / build:admin)
+   npm run lint         # jalankan ESLint di semua workspace
+   npm run typecheck    # jalankan tsc --noEmit di semua workspace
+   npm run clean        # bersihkan .turbo dan .next di semua workspace
+   ```
+
+4. **Jalankan script verifikasi:**
    ```bash
    npm run verify:fallback
-   ```
-
-3. **Jalankan server pengembangan app User:**
-   ```bash
-   npm run dev:user
-   ```
-   Buka `http://localhost:3000` di peramban Anda.
-
-4. **Build seluruh workspace:**
-   ```bash
-   npm run build
-   ```
-
-5. **Type-check seluruh workspace:**
-   ```bash
-   npm run typecheck
+   npm run verify:kalkulator
+   npm run verify:multi
+   npm run verify:skor
+   npm run verify:chef
    ```

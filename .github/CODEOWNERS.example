@@ -1,0 +1,9 @@
+# Template CODEOWNERS — salin ke `.github/CODEOWNERS` dan ganti `<github-melvin>` / `<github-wahyu>` dengan username GitHub asli.
+*                         @<github-melvin> @<github-wahyu>
+/apps/user/               @<github-melvin>
+/apps/admin/              @<github-wahyu>
+/supabase/                @<github-melvin> @<github-wahyu>
+/docs/                    @<github-melvin> @<github-wahyu>
+/scripts/                 @<github-melvin>
+/package.json             @<github-melvin> @<github-wahyu>
+/turbo.json               @<github-melvin> @<github-wahyu>
