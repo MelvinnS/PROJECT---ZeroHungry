@@ -8,11 +8,15 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "turbo run dev",
     "dev:user": "turbo run dev --filter=@zerohungry/user",
     "dev:admin": "turbo run dev --filter=@zerohungry/admin",
     "build": "turbo run build",
+    "build:user": "turbo run build --filter=@zerohungry/user",
+    "build:admin": "turbo run build --filter=@zerohungry/admin",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
+    "clean": "node -e \"const fs=require('fs');for(const p of ['.turbo','apps/user/.next','apps/user/.turbo','apps/admin/.next','apps/admin/.turbo'])fs.rmSync(p,{recursive:true,force:true})\"",
     "verify:chef": "tsx --tsconfig apps/user/tsconfig.json scripts/verify-chef.ts",
     "verify:fallback": "tsx scripts/verify-fallback.ts",
     "verify:kalkulator": "tsx scripts/verify-kalkulator.ts",

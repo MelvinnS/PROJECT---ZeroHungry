@@ -13,6 +13,29 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@zerohungry/admin",
+                "@zerohungry/admin/*",
+                "**/apps/admin/**",
+                "../admin/**",
+                "../../admin/**",
+                "../../../admin/**",
+                "../../../../admin/**",
+              ],
+              message: "apps/user dilarang meng-import langsung dari apps/admin.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
