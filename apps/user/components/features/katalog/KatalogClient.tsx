@@ -8,7 +8,7 @@ import {
   KategoriFilter,
   Olahan,
 } from "@/lib/katalog-data";
-import { OlahanCard } from "@/components/katalog/OlahanCard";
+import { OlahanCard } from "@/components/features/katalog/OlahanCard";
 import { Button } from "@/components/ui/Button";
 
 const INITIAL_VISIBLE_COUNT = 8;

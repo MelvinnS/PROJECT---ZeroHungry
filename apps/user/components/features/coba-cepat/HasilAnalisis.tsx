@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { IdeOlahanCard } from "./IdeOlahanCard";
-import { ChefChat } from "@/components/chef/ChefChat";
+import { ChefChat } from "@/components/features/chef/ChefChat";
 import type { HasilAnalisis as HasilAnalisisType, InputAnalisis } from "@/lib/schemas";
 
 interface HasilAnalisisProps {

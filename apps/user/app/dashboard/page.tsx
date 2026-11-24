@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUserProfile } from "@/lib/auth";
 import { getRingkasan, getRiwayat } from "@/lib/riwayat";
-import { DashboardView } from "@/components/dashboard/DashboardView";
+import { DashboardView } from "@/components/features/dashboard/DashboardView";
 
 export const metadata: Metadata = {
   title: "Dashboard | Dari Sisa Jadi Nilai",

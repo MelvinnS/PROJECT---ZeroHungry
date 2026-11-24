@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getCurrentUserProfile } from "@/lib/auth";
-import { CobaCepatClient } from "@/components/coba-cepat/CobaCepatClient";
+import { CobaCepatClient } from "@/components/features/coba-cepat/CobaCepatClient";
 
 export const metadata: Metadata = {
   title: "Coba Cepat | Dari Sisa Jadi Nilai",

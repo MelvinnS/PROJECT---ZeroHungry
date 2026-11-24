@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { IdeOlahanCard } from "./IdeOlahanCard";
-import { ChefChat } from "@/components/chef/ChefChat";
+import { ChefChat } from "@/components/features/chef/ChefChat";
 import type { HasilMulti, InputMulti } from "@/lib/schemas-multi";
 import { toInputTunggal, toHasilTunggal } from "@/lib/multi-ke-tunggal";
 

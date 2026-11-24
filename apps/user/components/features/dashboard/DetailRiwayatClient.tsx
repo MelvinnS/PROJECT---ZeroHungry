@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import type { RiwayatItem } from "@/lib/riwayat";
 import { StatusBadge } from "./StatusBadge";
-import { IdeOlahanCard } from "@/components/coba-cepat/IdeOlahanCard";
-import { ChefChat } from "@/components/chef/ChefChat";
+import { IdeOlahanCard } from "@/components/features/coba-cepat/IdeOlahanCard";
+import { ChefChat } from "@/components/features/chef/ChefChat";
 
 interface DetailRiwayatClientProps {
   riwayat: RiwayatItem;

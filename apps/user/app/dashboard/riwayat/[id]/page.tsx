@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUserProfile } from "@/lib/auth";
 import { getRiwayatById } from "@/lib/riwayat";
-import { DetailRiwayatClient } from "@/components/dashboard/DetailRiwayatClient";
+import { DetailRiwayatClient } from "@/components/features/dashboard/DetailRiwayatClient";
 
 export const metadata: Metadata = {
   title: "Detail Riwayat | Dari Sisa Jadi Nilai",

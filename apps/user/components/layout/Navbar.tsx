@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, LogOut } from "lucide-react";
-import { Logo } from "./Logo";
-import { Button } from "./ui/Button";
+import { Logo } from "@/components/Logo";
+import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import type { Profil } from "@/lib/auth-client";
 

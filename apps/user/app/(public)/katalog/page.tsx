@@ -1,6 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
-import { KatalogClient } from "@/components/katalog/KatalogClient";
+import { KatalogClient } from "@/components/features/katalog/KatalogClient";
 
 export const metadata: Metadata = {
   title: "Katalog Olahan | Dari Sisa Jadi Nilai",

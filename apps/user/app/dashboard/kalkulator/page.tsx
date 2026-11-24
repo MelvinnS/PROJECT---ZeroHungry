@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUserProfile } from "@/lib/auth";
-import { KalkulatorClient } from "@/components/kalkulator/KalkulatorClient";
+import { KalkulatorClient } from "@/components/features/kalkulator/KalkulatorClient";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Store, ArrowLeft } from "lucide-react";

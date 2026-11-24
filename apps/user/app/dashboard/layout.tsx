@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUserProfile } from "@/lib/auth";
-import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutClient";
+import { DashboardLayoutClient } from "@/components/features/dashboard/DashboardLayoutClient";
 
 export const metadata: Metadata = {
   title: "Dashboard | Dari Sisa Jadi Nilai",
