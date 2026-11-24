@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev:user": "turbo run dev --filter=@zerohungry/user",
+    "dev:admin": "turbo run dev --filter=@zerohungry/admin",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
