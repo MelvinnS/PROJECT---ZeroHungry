@@ -1,5 +1,5 @@
-import { getFallbackResult } from "../lib/fallback";
-import { HasilAnalisisSchema, InputAnalisis } from "../lib/schemas";
+import { getFallbackResult } from "../apps/user/lib/fallback";
+import { HasilAnalisisSchema, InputAnalisis } from "../apps/user/lib/schemas";
 
 // Daftar 12 kasus uji untuk memverifikasi fallback cerdas
 const testCases: { name: string; input: InputAnalisis }[] = [

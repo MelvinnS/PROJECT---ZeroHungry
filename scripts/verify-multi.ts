@@ -1,6 +1,6 @@
-import { HasilAnalisisSchema } from "../lib/schemas";
-import { InputMultiSchema, type HasilMulti, type InputMulti } from "../lib/schemas-multi";
-import { toInputTunggal, toHasilTunggal } from "../lib/multi-ke-tunggal";
+import { HasilAnalisisSchema } from "../apps/user/lib/schemas";
+import { InputMultiSchema, type HasilMulti, type InputMulti } from "../apps/user/lib/schemas-multi";
+import { toInputTunggal, toHasilTunggal } from "../apps/user/lib/multi-ke-tunggal";
 
 function assert(condition: boolean, msg: string) {
   if (!condition) {

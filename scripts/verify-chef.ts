@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { POST } from "../app/api/chef/route";
+import { POST } from "../apps/user/app/api/chef/route";
 
 function assert(condition: boolean, msg: string) {
   if (!condition) {

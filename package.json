@@ -12,7 +12,7 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "verify:chef": "tsx scripts/verify-chef.ts",
+    "verify:chef": "tsx --tsconfig apps/user/tsconfig.json scripts/verify-chef.ts",
     "verify:fallback": "tsx scripts/verify-fallback.ts",
     "verify:kalkulator": "tsx scripts/verify-kalkulator.ts",
     "verify:multi": "tsx scripts/verify-multi.ts",

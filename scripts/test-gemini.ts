@@ -1,6 +1,6 @@
 import { loadEnvConfig } from "@next/env";
-import { SYSTEM_PROMPT, buildUserMessage } from "../lib/prompts";
-import { HasilAnalisisSchema, type InputAnalisis } from "../lib/schemas";
+import { SYSTEM_PROMPT, buildUserMessage } from "../apps/user/lib/prompts";
+import { HasilAnalisisSchema, type InputAnalisis } from "../apps/user/lib/schemas";
 
 // 1. Muat environment variable dari .env.local
 const projectDir = process.cwd();

@@ -1,4 +1,4 @@
-import { hitungSkor, FAKTOR_SATUAN_KG, FAKTOR_KEAMANAN, HARGA_PER_KG } from "../lib/skor";
+import { hitungSkor, FAKTOR_SATUAN_KG, FAKTOR_KEAMANAN, HARGA_PER_KG } from "../apps/user/lib/skor";
 
 let hasError = false;
 

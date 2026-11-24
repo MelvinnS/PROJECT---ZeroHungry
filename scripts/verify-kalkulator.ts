@@ -4,7 +4,7 @@ import {
   formatRupiah,
   formatKg,
   type InputKalkulator,
-} from "../lib/kalkulator";
+} from "../apps/user/lib/kalkulator";
 
 let hasError = false;
 
