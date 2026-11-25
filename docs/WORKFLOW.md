@@ -4,8 +4,8 @@ Proyek ini menggunakan **2 branch aktif** untuk memisahkan area kerja tanpa sali
 
 | Branch | Pemilik | Area Utama |
 |---|---|---|
-| `dev-melvin` | Melvin | `apps/user/` (aplikasi pengguna & fitur AI/katalog/dashboard) |
-| `wahyu/itdev` | Wahyu | `apps/admin/` (panel admin & fitur administrasi) |
+| `dev-melvin` | Melvin (`@MelvinnS`) | `apps/user/**` (termasuk `app/`, `components/`, `lib/`, `server/`) |
+| `wahyu/itdev` | Wahyu (`@WagyuuA5`) | `apps/admin/**` (termasuk `app/`, `components/`, `hooks/`, `lib/`, `server/`) |
 
 ---
 

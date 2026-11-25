@@ -1,6 +1,6 @@
 # Arsitektur Monorepo — Dari Sisa Jadi Nilai
 
-Dokumen ini menjelaskan struktur monorepo, batasan antar-aplikasi, serta aturan kapan kode boleh diekstrak ke `packages/`.
+Dokumen ini menjelaskan struktur monorepo, pemisahan frontend vs backend di setiap aplikasi, arah ketergantungan import, serta aturan kapan kode boleh diekstrak ke `packages/`.
 
 ---
 
@@ -10,22 +10,40 @@ Dokumen ini menjelaskan struktur monorepo, batasan antar-aplikasi, serta aturan 
 zerohungry/
 ├── apps/
 │   ├── user/          # @zerohungry/user — Next.js 16 (port 3000), aplikasi utama pengguna
-│   └── admin/         # @zerohungry/admin — Next.js 16 (port 3001), panel admin (scaffold)
-├── docs/              # Dokumentasi arsitektur, database, environment, workflow, audit
+│   └── admin/         # @zerohungry/admin — Next.js 16 (port 3001), panel admin
+├── docs/              # Dokumentasi arsitektur, database, environment, workflow, migrasi
 ├── scripts/           # Script verifikasi & pengujian Gemini / fallback / skor
 ├── supabase/          # Skema SQL & kebijakan RLS Supabase
-├── .github/           # Template CODEOWNERS (.github/CODEOWNERS.example)
+├── .github/           # CODEOWNERS & template
 ├── package.json       # npm workspaces ("apps/*", "packages/*") + script Turborepo
 └── turbo.json         # Pipeline build, dev, lint, typecheck
 ```
 
 ---
 
-## 2. Batasan Antar-Aplikasi
+## 2. Struktur Kembar Frontend vs Backend (Per App)
 
-- `apps/user` dan `apps/admin` adalah aplikasi Next.js terpisah dan **dilarang saling meng-import langsung** (ditegakkan oleh aturan ESLint `no-restricted-imports` di kedua app).
-- `apps/user` memiliki client Supabase sendiri di `apps/user/lib/supabase/` dan helper auth di `apps/user/lib/auth.ts`.
-- `apps/admin` **akan memiliki `apps/admin/lib/supabase/` sendiri** saat fitur login dan akses database admin mulai dibuat (termasuk pemakaian `SUPABASE_SERVICE_ROLE_KEY` khusus di sisi server `apps/admin`).
+Baik `apps/user/` maupun `apps/admin/` menggunakan struktur lapisan yang sama:
+
+```
+apps/<app>/
+├── app/               # Halaman App Router + app/api/** (pintu HTTP tipis)
+├── components/        # FRONTEND: ui/, layout/, features/<domain>/
+├── hooks/             # FRONTEND: custom React hooks
+├── lib/               # CLIENT-SAFE: tipe, format, konstanta, Supabase browser client
+└── server/            # BACKEND: ai/, services/, supabase/ (hanya berjalan di server)
+```
+
+### Arah Import (Ditegakkan oleh ESLint `no-restricted-imports`)
+
+```
+app/ (pages & api) ──▶ server/ ──▶ lib/
+components/ & hooks/ ──────────────▶ lib/
+```
+
+- `components/`, `hooks/`, dan `lib/` **dilarang keras** meng-import modul dari `server/` (termasuk `import type`).
+- `apps/user` dan `apps/admin` **dilarang keras** saling meng-import langsung.
+- `SUPABASE_SERVICE_ROLE_KEY` hanya boleh dibaca di `apps/admin/server/` (tidak pernah di `apps/user`, `lib/`, atau `components/`).
 
 ---
 
