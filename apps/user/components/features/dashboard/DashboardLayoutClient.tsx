@@ -14,7 +14,7 @@ import {
   Sprout,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import type { RolePengguna } from "@/lib/auth";
+import type { RolePengguna } from "@/lib/auth-client";
 
 interface DashboardLayoutClientProps {
   role: RolePengguna;

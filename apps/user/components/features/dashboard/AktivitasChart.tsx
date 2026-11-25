@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import type { TitikGrafik } from "@/lib/riwayat";
+import type { TitikGrafik } from "@/lib/riwayat-types";
 import { formatKg } from "@/lib/kalkulator";
 
 interface AktivitasChartProps {

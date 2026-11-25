@@ -11,7 +11,7 @@ import {
   Sparkles,
   AlertOctagon,
 } from "lucide-react";
-import type { RiwayatItem } from "@/lib/riwayat";
+import type { RiwayatItem } from "@/lib/riwayat-types";
 import { StatusBadge } from "./StatusBadge";
 import { IdeOlahanCard } from "@/components/features/coba-cepat/IdeOlahanCard";
 import { ChefChat } from "@/components/features/chef/ChefChat";

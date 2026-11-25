@@ -1,37 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import type { HasilAnalisis } from "@/lib/schemas";
+import type {
+  RiwayatItem,
+  TitikGrafik,
+  RingkasanRiwayat,
+} from "@/lib/riwayat-types";
 
-export interface RiwayatItem {
-  id: string;
-  user_id: string;
-  nama_bahan: string;
-  jumlah: number;
-  satuan: string;
-  kondisi: string;
-  kategori: string;
-  keamanan: "aman" | "waspada" | "tidak_aman";
-  hasil: HasilAnalisis;
-  kg_diselamatkan: number;
-  rupiah_dihemat: number;
-  porsi: number;
-  source: string;
-  created_at: string;
-}
-
-export interface TitikGrafik {
-  label: string;
-  kg: number;
-}
-
-export interface RingkasanRiwayat {
-  totalKg: number;
-  totalRupiah: number;
-  totalPorsi: number;
-  jumlahBahan: number;
-  mingguan: TitikGrafik[];
-  bulanan: TitikGrafik[];
-}
+export type { RiwayatItem, TitikGrafik, RingkasanRiwayat };
 
 export interface GetRiwayatOptions {
   limit?: number;

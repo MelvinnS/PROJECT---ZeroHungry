@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { ChefHat, X, Send, WifiOff, ChevronDown } from "lucide-react";
-import type { KonteksChef, PesanRiwayat } from "@/lib/prompts-chef";
+import type { KonteksChef, PesanRiwayat } from "@/lib/chef-types";
 
 // Helper hook hydration-safe untuk deteksi client-side mounted
 const emptySubscribe = () => () => {};

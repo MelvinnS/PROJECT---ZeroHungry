@@ -15,7 +15,7 @@ import {
   Utensils,
   Hourglass,
 } from "lucide-react";
-import type { RiwayatItem } from "@/lib/riwayat";
+import type { RiwayatItem } from "@/lib/riwayat-types";
 import { StatusBadge } from "./StatusBadge";
 
 interface RiwayatClientProps {

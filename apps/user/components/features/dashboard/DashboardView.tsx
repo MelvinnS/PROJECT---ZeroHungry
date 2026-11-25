@@ -17,8 +17,8 @@ import {
   Wheat,
   Clock,
 } from "lucide-react";
-import type { Profil } from "@/lib/auth";
-import type { RingkasanRiwayat, RiwayatItem } from "@/lib/riwayat";
+import type { Profil } from "@/lib/auth-client";
+import type { RingkasanRiwayat, RiwayatItem } from "@/lib/riwayat-types";
 import { formatRupiah, formatKg } from "@/lib/kalkulator";
 import { StatusBadge } from "./StatusBadge";
 import { AktivitasChart } from "./AktivitasChart";

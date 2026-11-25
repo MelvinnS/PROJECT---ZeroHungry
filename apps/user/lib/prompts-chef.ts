@@ -1,22 +1,6 @@
-// Tipe data riwayat percakapan Chef
-export interface PesanRiwayat {
-  role: "user" | "chef";
-  teks: string;
-}
+import type { PesanRiwayat, KonteksChef } from "@/lib/chef-types";
 
-// Tipe data konteks untuk Chef
-export interface KonteksChef {
-  bahan: Array<{
-    nama: string;
-    keamanan: "aman" | "waspada" | "tidak_aman";
-    sisa: string;
-  }>;
-  resep?: {
-    nama: string;
-    bahan_tambahan: Array<{ nama: string; jumlah: string }>;
-    langkah: string[];
-  };
-}
+export type { PesanRiwayat, KonteksChef };
 
 // Prompt sistem yang dikirim ke Gemini sebagai panduan Chef Sisa
 export const SYSTEM_PROMPT_CHEF = `Kamu adalah "Chef Sisa", pendamping masak yang ramah dan praktis untuk pengguna Indonesia yang mengolah bahan pangan sisa.
