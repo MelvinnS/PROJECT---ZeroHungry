@@ -1,5 +1,5 @@
 import { loadEnvConfig } from "@next/env";
-import { SYSTEM_PROMPT, buildUserMessage } from "../apps/user/lib/prompts";
+import { SYSTEM_PROMPT, buildUserMessage } from "../apps/user/server/ai/prompts";
 import { HasilAnalisisSchema, type InputAnalisis } from "../apps/user/lib/schemas";
 
 // 1. Muat environment variable dari .env.local

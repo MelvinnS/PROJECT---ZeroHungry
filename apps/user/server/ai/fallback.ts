@@ -1,4 +1,4 @@
-import { HasilAnalisis, HasilAnalisisSchema, InputAnalisis } from "./schemas";
+import { HasilAnalisis, HasilAnalisisSchema, InputAnalisis } from "@/lib/schemas";
 import {
   FALLBACK_DATA,
   FallbackKey,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { SYSTEM_PROMPT_CHEF, buildUserMessageChef } from "@/lib/prompts-chef";
-import { panggilGeminiRantai } from "@/lib/gemini";
+import { SYSTEM_PROMPT_CHEF, buildUserMessageChef } from "@/server/ai/prompts-chef";
+import { panggilGeminiRantai } from "@/server/ai/gemini";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;

@@ -1,4 +1,4 @@
-import type { InputAnalisis } from "./schemas";
+import type { InputAnalisis } from "@/lib/schemas";
 
 // Prompt sistem yang dikirim ke Claude sebagai panduan analisis bahan pangan
 export const SYSTEM_PROMPT = `Kamu adalah "Asisten Sisa Jadi Nilai", ahli teknologi pangan dan kuliner lokal

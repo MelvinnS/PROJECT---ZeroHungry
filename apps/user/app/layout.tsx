@@ -8,7 +8,7 @@ import {
   PublicFooterWrapper,
   PublicMainWrapper,
 } from "@/components/layout/PublicLayoutWrapper";
-import { getCurrentUserProfile } from "@/lib/auth";
+import { getCurrentUserProfile } from "@/server/services/auth";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],

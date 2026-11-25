@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/server/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type {
   RiwayatItem,

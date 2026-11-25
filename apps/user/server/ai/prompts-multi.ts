@@ -1,4 +1,4 @@
-import type { InputMulti } from "./schemas-multi";
+import type { InputMulti } from "@/lib/schemas-multi";
 
 // Prompt sistem yang dikirim ke Gemini sebagai panduan analisis multi-bahan pangan
 export const SYSTEM_PROMPT_MULTI = `Kamu adalah "Asisten Sisa Jadi Nilai", ahli teknologi pangan dan kuliner lokal

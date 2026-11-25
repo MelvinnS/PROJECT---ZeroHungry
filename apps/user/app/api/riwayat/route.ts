@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/server/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { InputAnalisisSchema, HasilAnalisisSchema } from "@/lib/schemas";
-import { hitungSkor } from "@/lib/skor";
+import { hitungSkor } from "@/server/services/skor";
 
 const SimpanRiwayatBodySchema = z.object({
   input: InputAnalisisSchema,

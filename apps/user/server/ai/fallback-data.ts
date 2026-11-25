@@ -1,4 +1,4 @@
-import { HasilAnalisis, InputAnalisis } from "./schemas";
+import { HasilAnalisis, InputAnalisis } from "@/lib/schemas";
 
 export type FallbackKey = "pisang" | "nasi" | "tempe" | "sayur" | "singkong";
 

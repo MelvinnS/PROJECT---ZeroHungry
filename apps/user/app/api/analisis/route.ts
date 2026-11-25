@@ -4,9 +4,9 @@ import {
   HasilAnalisisSchema,
   type HasilAnalisis,
 } from "@/lib/schemas";
-import { SYSTEM_PROMPT, buildUserMessage } from "@/lib/prompts";
-import { getFallbackResult } from "@/lib/fallback";
-import { panggilGeminiRantai } from "@/lib/gemini";
+import { SYSTEM_PROMPT, buildUserMessage } from "@/server/ai/prompts";
+import { getFallbackResult } from "@/server/ai/fallback";
+import { panggilGeminiRantai } from "@/server/ai/gemini";
 
 // Konfigurasi runtime Node.js dan durasi maksimum eksekusi (60 detik)
 export const runtime = "nodejs";

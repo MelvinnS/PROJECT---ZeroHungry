@@ -18,7 +18,7 @@
     "typecheck": "turbo run typecheck",
     "clean": "node -e \"const fs=require('fs');for(const p of ['.turbo','apps/user/.next','apps/user/.turbo','apps/admin/.next','apps/admin/.turbo'])fs.rmSync(p,{recursive:true,force:true})\"",
     "verify:chef": "tsx --tsconfig apps/user/tsconfig.json scripts/verify-chef.ts",
-    "verify:fallback": "tsx scripts/verify-fallback.ts",
+    "verify:fallback": "tsx --tsconfig apps/user/tsconfig.json scripts/verify-fallback.ts",
     "verify:kalkulator": "tsx scripts/verify-kalkulator.ts",
     "verify:multi": "tsx scripts/verify-multi.ts",
     "verify:skor": "tsx scripts/verify-skor.ts"

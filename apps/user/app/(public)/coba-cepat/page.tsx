@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getCurrentUserProfile } from "@/lib/auth";
+import { getCurrentUserProfile } from "@/server/services/auth";
 import { CobaCepatClient } from "@/components/features/coba-cepat/CobaCepatClient";
 
 export const metadata: Metadata = {

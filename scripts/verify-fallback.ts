@@ -1,4 +1,4 @@
-import { getFallbackResult } from "../apps/user/lib/fallback";
+import { getFallbackResult } from "../apps/user/server/ai/fallback";
 import { HasilAnalisisSchema, InputAnalisis } from "../apps/user/lib/schemas";
 
 // Daftar 12 kasus uji untuk memverifikasi fallback cerdas

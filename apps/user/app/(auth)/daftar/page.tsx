@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getCurrentUserProfile, sanitizeNext } from "@/lib/auth";
+import { getCurrentUserProfile, sanitizeNext } from "@/server/services/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { AuthCard } from "@/components/features/auth/AuthCard";
 

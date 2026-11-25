@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getCurrentUserProfile } from "@/lib/auth";
-import { getRiwayat } from "@/lib/riwayat";
+import { getCurrentUserProfile } from "@/server/services/auth";
+import { getRiwayat } from "@/server/services/riwayat";
 import { RiwayatClient } from "@/components/features/dashboard/RiwayatClient";
 
 export const metadata: Metadata = {

@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/server/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import type { Profil, RolePengguna, TipeUsaha } from "./auth-client";
+import type { Profil, RolePengguna, TipeUsaha } from "@/lib/auth-client";
 
-export * from "./auth-client";
+export * from "@/lib/auth-client";
 
 /**
  * Mengambil data profil pengguna yang sedang login di sisi server.

@@ -6,9 +6,9 @@ import {
   type HasilMulti,
 } from "@/lib/schemas-multi";
 import type { InputAnalisis } from "@/lib/schemas";
-import { SYSTEM_PROMPT_MULTI, buildUserMessageMulti } from "@/lib/prompts-multi";
-import { getFallbackResult } from "@/lib/fallback";
-import { panggilGeminiRantai } from "@/lib/gemini";
+import { SYSTEM_PROMPT_MULTI, buildUserMessageMulti } from "@/server/ai/prompts-multi";
+import { getFallbackResult } from "@/server/ai/fallback";
+import { panggilGeminiRantai } from "@/server/ai/gemini";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
