@@ -2,6 +2,35 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+const crossAppAdminPatterns = [
+  {
+    group: [
+      "@zerohungry/admin",
+      "@zerohungry/admin/*",
+      "**/apps/admin/**",
+      "../admin/**",
+      "../../admin/**",
+      "../../../admin/**",
+      "../../../../admin/**",
+    ],
+    message: "apps/user dilarang meng-import langsung dari apps/admin.",
+  },
+];
+
+const noServerPatterns = [
+  {
+    group: [
+      "@/server/*",
+      "@/server/**",
+      "../server/**",
+      "../../server/**",
+      "../../../server/**",
+      "../../../../server/**",
+    ],
+    message: "components/, hooks/, dan lib/ dilarang meng-import modul server/.",
+  },
+];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -15,24 +44,15 @@ const eslintConfig = defineConfig([
   ]),
   {
     rules: {
+      "no-restricted-imports": ["error", { patterns: crossAppAdminPatterns }],
+    },
+  },
+  {
+    files: ["components/**/*.{ts,tsx}", "hooks/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
+    rules: {
       "no-restricted-imports": [
         "error",
-        {
-          patterns: [
-            {
-              group: [
-                "@zerohungry/admin",
-                "@zerohungry/admin/*",
-                "**/apps/admin/**",
-                "../admin/**",
-                "../../admin/**",
-                "../../../admin/**",
-                "../../../../admin/**",
-              ],
-              message: "apps/user dilarang meng-import langsung dari apps/admin.",
-            },
-          ],
-        },
+        { patterns: [...crossAppAdminPatterns, ...noServerPatterns] },
       ],
     },
   },
